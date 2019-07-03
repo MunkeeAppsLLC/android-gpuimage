@@ -120,6 +120,8 @@ object GPUImageFilterTools {
             addFilter("Solarize", FilterType.SOLARIZE)
 
             addFilter("Vibrance", FilterType.VIBRANCE)
+
+            addFilter("Grain Noise", FilterType.GRAIN_NOISE)
         }
 
         val builder = AlertDialog.Builder(context)
@@ -307,6 +309,7 @@ object GPUImageFilterTools {
             FilterType.TRANSFORM2D -> GPUImageTransformFilter()
             FilterType.SOLARIZE -> GPUImageSolarizeFilter()
             FilterType.VIBRANCE -> GPUImageVibranceFilter()
+            FilterType.GRAIN_NOISE -> GPUImageGrainNoiseFilter()
         }
     }
 
@@ -330,7 +333,7 @@ object GPUImageFilterTools {
         BLEND_DIFFERENCE, BLEND_DISSOLVE, BLEND_EXCLUSION, BLEND_SOURCE_OVER, BLEND_HARD_LIGHT, BLEND_LIGHTEN, BLEND_ADD, BLEND_DIVIDE, BLEND_MULTIPLY, BLEND_OVERLAY, BLEND_SCREEN, BLEND_ALPHA,
         BLEND_COLOR, BLEND_HUE, BLEND_SATURATION, BLEND_LUMINOSITY, BLEND_LINEAR_BURN, BLEND_SOFT_LIGHT, BLEND_SUBTRACT, BLEND_CHROMA_KEY, BLEND_NORMAL, LOOKUP_AMATORKA,
         GAUSSIAN_BLUR, CROSSHATCH, BOX_BLUR, CGA_COLORSPACE, DILATION, KUWAHARA, RGB_DILATION, SKETCH, TOON, SMOOTH_TOON, BULGE_DISTORTION, GLASS_SPHERE, HAZE, LAPLACIAN, NON_MAXIMUM_SUPPRESSION,
-        SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE
+        SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, GRAIN_NOISE
     }
 
     private class FilterList {
@@ -384,6 +387,7 @@ object GPUImageFilterTools {
                 is GPUImageTransformFilter -> RotateAdjuster(filter)
                 is GPUImageSolarizeFilter -> SolarizeAdjuster(filter)
                 is GPUImageVibranceFilter -> VibranceAdjuster(filter)
+                is GPUImageGrainNoiseFilter -> GrainNoiseAdjuster(filter)
                 else -> null
             }
         }
@@ -674,6 +678,16 @@ object GPUImageFilterTools {
             Adjuster<GPUImageVibranceFilter>(filter) {
             override fun adjust(percentage: Int) {
                 filter.setVibrance(range(percentage, -1.2f, 1.2f))
+            }
+        }
+        private inner class GrainNoiseAdjuster(
+                filter: GPUImageGrainNoiseFilter
+        ) : Adjuster<GPUImageGrainNoiseFilter>(filter) {
+            override fun adjust(percentage: Int) {
+                filter.setTime(range(percentage, 5f, 500f))
+                filter.setScale(range(percentage, 2000f, 2000f))
+                filter.setGrainAmount(range(percentage, 0f, 1f))
+                filter.setGrainSize(range(percentage, 1.5f, 2.5f))
             }
         }
     }
