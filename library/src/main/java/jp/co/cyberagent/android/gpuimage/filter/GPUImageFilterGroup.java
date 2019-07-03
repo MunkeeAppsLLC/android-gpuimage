@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import jp.co.cyberagent.android.gpuimage.util.Rotation;
@@ -50,7 +51,11 @@ public class GPUImageFilterGroup extends GPUImageFilter {
      * Instantiates a new GPUImageFilterGroup with no filters.
      */
     public GPUImageFilterGroup() {
-        this(null);
+        this(new ArrayList<GPUImageFilter>());
+    }
+
+    public GPUImageFilterGroup(GPUImageFilter... filters) {
+        this(Arrays.asList(filters));
     }
 
     /**
