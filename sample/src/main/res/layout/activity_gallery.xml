@@ -22,6 +22,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:max="100" />
+
+        <ImageView
+            android:id="@+id/lut_table"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:scaleType="fitCenter"/>
     </FrameLayout>
 
     <LinearLayout

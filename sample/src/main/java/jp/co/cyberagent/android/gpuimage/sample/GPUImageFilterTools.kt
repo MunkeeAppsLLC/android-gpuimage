@@ -30,6 +30,7 @@ object GPUImageFilterTools {
         listener: (filter: GPUImageFilter) -> Unit
     ) {
         val filters = FilterList().apply {
+            addFilter("3DLUT File", FilterType.LOOKUP_FILE)
             addFilter("Contrast", FilterType.CONTRAST)
             addFilter("Invert", FilterType.INVERT)
             addFilter("Pixelation", FilterType.PIXELATION)
@@ -313,6 +314,11 @@ object GPUImageFilterTools {
             FilterType.VIBRANCE -> GPUImageVibranceFilter()
             FilterType.PERLIN_NOISE -> GPUImagePerlinNoiseFilter()
             FilterType.GRAIN_NOISE -> GPUImageGrainNoiseFilter()
+            FilterType.LOOKUP_FILE -> {
+                val filterStream = context.resources.openRawResource(R.raw.tokyo)
+                val lookupFilter = GPUImage3DLutTableFilter(filterStream, 17)
+                lookupFilter
+            }
         }
     }
 
@@ -327,6 +333,7 @@ object GPUImageFilterTools {
         } catch (e: Exception) {
             e.printStackTrace()
             GPUImageFilter()
+
         }
     }
 
@@ -336,7 +343,8 @@ object GPUImageFilterTools {
         BLEND_DIFFERENCE, BLEND_DISSOLVE, BLEND_EXCLUSION, BLEND_SOURCE_OVER, BLEND_HARD_LIGHT, BLEND_LIGHTEN, BLEND_ADD, BLEND_DIVIDE, BLEND_MULTIPLY, BLEND_OVERLAY, BLEND_SCREEN, BLEND_ALPHA,
         BLEND_COLOR, BLEND_HUE, BLEND_SATURATION, BLEND_LUMINOSITY, BLEND_LINEAR_BURN, BLEND_SOFT_LIGHT, BLEND_SUBTRACT, BLEND_CHROMA_KEY, BLEND_NORMAL, LOOKUP_AMATORKA,
         GAUSSIAN_BLUR, CROSSHATCH, BOX_BLUR, CGA_COLORSPACE, DILATION, KUWAHARA, RGB_DILATION, SKETCH, TOON, SMOOTH_TOON, BULGE_DISTORTION, GLASS_SPHERE, HAZE, LAPLACIAN, NON_MAXIMUM_SUPPRESSION,
-        SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, PERLIN_NOISE, GRAIN_NOISE
+        SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, PERLIN_NOISE, GRAIN_NOISE,
+        LOOKUP_FILE
     }
 
     private class FilterList {
@@ -392,6 +400,7 @@ object GPUImageFilterTools {
                 is GPUImageVibranceFilter -> VibranceAdjuster(filter)
                 is GPUImagePerlinNoiseFilter -> PerlinNoiseAdjuster(filter)
                 is GPUImageGrainNoiseFilter -> GrainNoiseAdjuster(filter)
+                is GPUImage3DLutTableFilter -> LookupFileAdjuster(filter)
                 else -> null
             }
         }
@@ -703,6 +712,14 @@ object GPUImageFilterTools {
                 filter.setScale(range(percentage, 2000f, 2000f))
                 filter.setGrainAmount(range(percentage, 0f, 1f))
                 filter.setGrainSize(range(percentage, 1.5f, 2.5f))
+            }
+        }
+
+        private inner class LookupFileAdjuster(
+                filter: GPUImage3DLutTableFilter
+        ) : Adjuster<GPUImage3DLutTableFilter>(filter) {
+            override fun adjust(percentage: Int) {
+                filter.setIntensity(range(percentage, 0f, 1f))
             }
         }
     }
