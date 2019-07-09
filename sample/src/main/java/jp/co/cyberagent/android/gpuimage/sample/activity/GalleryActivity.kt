@@ -19,11 +19,13 @@ package jp.co.cyberagent.android.gpuimage.sample.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import jp.co.cyberagent.android.gpuimage.GPUImageView
+import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DLutTableFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
@@ -34,6 +36,7 @@ class GalleryActivity : AppCompatActivity() {
     private var filterAdjuster: FilterAdjuster? = null
     private val gpuImageView: GPUImageView by lazy { findViewById<GPUImageView>(R.id.gpuimage) }
     private val seekBar: SeekBar by lazy { findViewById<SeekBar>(R.id.seekBar) }
+    private val lutTableImage: ImageView by lazy { findViewById<ImageView>(R.id.lut_table) }
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,6 +97,9 @@ class GalleryActivity : AppCompatActivity() {
                 filterAdjuster!!.adjust(seekBar.progress)
             } else {
                 seekBar.visibility = View.GONE
+            }
+            if (filter is GPUImage3DLutTableFilter) {
+                lutTableImage.setImageBitmap(filter.bitmap)
             }
         }
     }
