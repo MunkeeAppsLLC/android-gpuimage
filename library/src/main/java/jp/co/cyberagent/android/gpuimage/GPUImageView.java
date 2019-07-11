@@ -583,4 +583,12 @@ public class GPUImageView extends FrameLayout {
     public interface OnPictureSavedListener {
         void onPictureSaved(Uri uri);
     }
+
+    public int getImageWidth() {
+        return getGPUImage().getImageWidth();
+    }
+
+    public int getImageHeight() {
+        return getGPUImage().getImageHeight();
+    }
 }

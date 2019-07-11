@@ -22,7 +22,6 @@ import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.opengl.Matrix
 import jp.co.cyberagent.android.gpuimage.filter.*
-import java.util.*
 
 object GPUImageFilterTools {
     fun showDialog(
@@ -125,12 +124,14 @@ object GPUImageFilterTools {
             addFilter("Perlin Noise", GPUImageFilterTools.FilterType.PERLIN_NOISE)
 
             addFilter("Grain Noise", FilterType.GRAIN_NOISE)
+
+            this.sortBy { it.first }
         }
 
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Choose a filter")
-        builder.setItems(filters.names.toTypedArray()) { _, item ->
-            listener(createFilterForType(context, filters.filters[item]))
+        builder.setItems(filters.map { it.first }.toTypedArray()) { _, item ->
+            listener(createFilterForType(context, filters[item].second))
         }
         builder.create().show()
     }
@@ -343,13 +344,10 @@ object GPUImageFilterTools {
         LOOKUP_FILE
     }
 
-    private class FilterList {
-        val names: MutableList<String> = LinkedList()
-        val filters: MutableList<FilterType> = LinkedList()
+    private class FilterList : ArrayList<Pair<String, FilterType>>() {
 
         fun addFilter(name: String, filter: FilterType) {
-            names.add(name)
-            filters.add(filter)
+            this.add(Pair(name, filter))
         }
     }
 
@@ -671,7 +669,11 @@ object GPUImageFilterTools {
             Adjuster<GPUImageTransformFilter>(filter) {
             override fun adjust(percentage: Int) {
                 val transform = FloatArray(16)
-                Matrix.setRotateM(transform, 0, (360 * percentage / 100).toFloat(), 0f, 0f, 1.0f)
+                val range = range(percentage, 0.5f, 1f)
+                Matrix.setIdentityM(transform, 0)
+//                Matrix.setRotateM(transform, 0, (360 * percentage / 100).toFloat(), 0f, 0f, 1.0f)
+//                Matrix.scaleM(transform, 0, range, range, 1.0f)
+                Matrix.translateM(transform, 0, range, range, 1.0f)
                 filter.transform3D = transform
             }
         }

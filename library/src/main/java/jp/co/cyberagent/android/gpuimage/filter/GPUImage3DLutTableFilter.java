@@ -23,11 +23,6 @@ import java.io.InputStream;
 
 public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
 
-    private static String TAG = GPUImage3DLutTableFilter.class.getSimpleName();
-
-    private static final int BUFFER_READ_SIZE = 2048;
-    private static final int BUFFER_SIZE = 4;
-
     public static final String LOOKUP_FRAGMENT_SHADER =
             "#version 100\n" +
                     "\n" +
@@ -91,11 +86,6 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
     private int dimensionLocation;
     private int lookupTextureDimension;
     private int lookupTextureDimensionLocation;
-
-    private int readBufferIndex = 0;
-    private int readBufferLength = 0;
-    private byte[] buffer = new byte[BUFFER_SIZE];
-    private byte[] readBuffer = new byte[BUFFER_READ_SIZE];
 
     public GPUImage3DLutTableFilter(InputStream filterInputStream,
                                     InputStreamAdapter inputStreamAdapter,

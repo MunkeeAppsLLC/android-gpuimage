@@ -358,4 +358,12 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
             runOnDrawEnd.add(runnable);
         }
     }
+
+    public int getImageWidth() {
+        return imageWidth;
+    }
+
+    public int getImageHeight() {
+        return imageHeight;
+    }
 }
