@@ -75,9 +75,10 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     private boolean flipVertical;
     private GPUImage.ScaleType scaleType = GPUImage.ScaleType.CENTER_CROP;
 
-    private float backgroundRed = 0;
-    private float backgroundGreen = 0;
-    private float backgroundBlue = 0;
+    private float backgroundRed = 0f;
+    private float backgroundGreen = 0f;
+    private float backgroundBlue = 0f;
+    private float backgroundAlpha = 0f;
 
     public GPUImageRenderer(final GPUImageFilter filter) {
         this.filter = filter;
@@ -97,7 +98,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     @Override
     public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
-        GLES20.glClearColor(backgroundRed, backgroundGreen, backgroundBlue, 1);
+        GLES20.glClearColor(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         filter.ifNeedInit();
     }
@@ -133,10 +134,11 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
      * @param green green color value
      * @param blue  red color value
      */
-    public void setBackgroundColor(float red, float green, float blue) {
+    public void setBackgroundColor(float red, float green, float blue, float alpha) {
         backgroundRed = red;
         backgroundGreen = green;
         backgroundBlue = blue;
+        backgroundAlpha = alpha;
     }
 
     private void runAll(Queue<Runnable> queue) {

@@ -172,8 +172,8 @@ public class GPUImageView extends FrameLayout {
      * @param green green color value
      * @param blue  red color value
      */
-    public void setBackgroundColor(float red, float green, float blue) {
-        gpuImage.setBackgroundColor(red, green, blue);
+    public void setBackgroundColor(float red, float green, float blue, float alpha) {
+        gpuImage.setBackgroundColor(red, green, blue, alpha);
     }
 
     /**
@@ -509,10 +509,9 @@ public class GPUImageView extends FrameLayout {
 
         private void init() {
             ProgressBar view = new ProgressBar(getContext());
-            view.setLayoutParams(
-                    new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+            view.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER));
             addView(view);
-            setBackgroundColor(Color.BLACK);
+            setBackgroundColor(Color.TRANSPARENT);
         }
     }
 

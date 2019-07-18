@@ -110,6 +110,8 @@ public class GPUImage {
         glSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
         glSurfaceView.setRenderer(renderer);
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        glSurfaceView.setZOrderOnTop(true);
+        glSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
         glSurfaceView.requestRender();
     }
 
@@ -136,8 +138,8 @@ public class GPUImage {
      * @param green green color value
      * @param blue  red color value
      */
-    public void setBackgroundColor(float red, float green, float blue) {
-        renderer.setBackgroundColor(red, green, blue);
+    public void setBackgroundColor(float red, float green, float blue, float alpha) {
+        renderer.setBackgroundColor(red, green, blue, alpha);
     }
 
     /**
