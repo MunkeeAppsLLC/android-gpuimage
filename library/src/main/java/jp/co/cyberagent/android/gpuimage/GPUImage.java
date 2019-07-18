@@ -61,7 +61,7 @@ public class GPUImage {
 
     private final Context context;
     private final GPUImageRenderer renderer;
-    private int surfaceType = SURFACE_TYPE_SURFACE_VIEW;
+    private int surfaceType = SURFACE_TYPE_TEXTURE_VIEW;
     private GLSurfaceView glSurfaceView;
     private GLTextureView glTextureView;
     private GPUImageFilter filter;
@@ -110,7 +110,7 @@ public class GPUImage {
         glSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
         glSurfaceView.setRenderer(renderer);
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        glSurfaceView.setZOrderOnTop(true);
+//        glSurfaceView.setZOrderOnTop(true);
         glSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
         glSurfaceView.requestRender();
     }

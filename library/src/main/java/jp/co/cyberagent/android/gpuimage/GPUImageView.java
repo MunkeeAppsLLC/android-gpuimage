@@ -89,6 +89,7 @@ public class GPUImageView extends FrameLayout {
             gpuImage.setGLSurfaceView((GLSurfaceView) surfaceView);
         }
         addView(surfaceView);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
     }
 
     @Override
