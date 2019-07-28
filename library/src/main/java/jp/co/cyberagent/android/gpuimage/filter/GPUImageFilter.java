@@ -23,7 +23,8 @@ import android.opengl.GLES20;
 
 import java.io.InputStream;
 import java.nio.FloatBuffer;
-import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
@@ -49,7 +50,7 @@ public class GPUImageFilter {
             "     gl_FragColor = texture2D(inputImageTexture, textureCoordinate);\n" +
             "}";
 
-    private final LinkedList<Runnable> runOnDraw;
+    private final Queue<Runnable> runOnDraw;
     private final String vertexShader;
     private final String fragmentShader;
     private int glProgId;
@@ -65,7 +66,7 @@ public class GPUImageFilter {
     }
 
     public GPUImageFilter(final String vertexShader, final String fragmentShader) {
-        runOnDraw = new LinkedList<>();
+        runOnDraw = new ConcurrentLinkedQueue<>();
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
     }
@@ -136,7 +137,7 @@ public class GPUImageFilter {
 
     protected void runPendingOnDrawTasks() {
         while (!runOnDraw.isEmpty()) {
-            runOnDraw.removeFirst().run();
+            runOnDraw.remove().run();
         }
     }
 
@@ -265,7 +266,7 @@ public class GPUImageFilter {
 
     protected void runOnDraw(final Runnable runnable) {
         synchronized (runOnDraw) {
-            runOnDraw.addLast(runnable);
+            runOnDraw.add(runnable);
         }
     }
 

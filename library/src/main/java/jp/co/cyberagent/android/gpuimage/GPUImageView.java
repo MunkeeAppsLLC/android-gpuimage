@@ -44,12 +44,11 @@ import java.util.concurrent.Semaphore;
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
 import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
-import static jp.co.cyberagent.android.gpuimage.GPUImage.SURFACE_TYPE_SURFACE_VIEW;
 import static jp.co.cyberagent.android.gpuimage.GPUImage.SURFACE_TYPE_TEXTURE_VIEW;
 
 public class GPUImageView extends FrameLayout {
 
-    private int surfaceType = SURFACE_TYPE_SURFACE_VIEW;
+    private int surfaceType = SURFACE_TYPE_TEXTURE_VIEW;
     private View surfaceView;
     private GPUImage gpuImage;
     private boolean isShowLoading = true;
@@ -123,6 +122,10 @@ public class GPUImageView extends FrameLayout {
      */
     public GPUImage getGPUImage() {
         return gpuImage;
+    }
+
+    public View getSurfaceView() {
+        return surfaceView;
     }
 
     /**
