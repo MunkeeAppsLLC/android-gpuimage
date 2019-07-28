@@ -61,7 +61,7 @@ public class GPUImage {
 
     private final Context context;
     private final GPUImageRenderer renderer;
-    private int surfaceType = SURFACE_TYPE_SURFACE_VIEW;
+    private int surfaceType = SURFACE_TYPE_TEXTURE_VIEW;
     private GLSurfaceView glSurfaceView;
     private GLTextureView glTextureView;
     private GPUImageFilter filter;
@@ -110,6 +110,8 @@ public class GPUImage {
         glSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
         glSurfaceView.setRenderer(renderer);
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+//        glSurfaceView.setZOrderOnTop(true);
+        glSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
         glSurfaceView.requestRender();
     }
 
@@ -136,8 +138,8 @@ public class GPUImage {
      * @param green green color value
      * @param blue  red color value
      */
-    public void setBackgroundColor(float red, float green, float blue) {
-        renderer.setBackgroundColor(red, green, blue);
+    public void setBackgroundColor(float red, float green, float blue, float alpha) {
+        renderer.setBackgroundColor(red, green, blue, alpha);
     }
 
     /**
@@ -428,6 +430,14 @@ public class GPUImage {
     public void saveToPictures(final String folderName, final String fileName,
                                final OnPictureSavedListener listener) {
         saveToPictures(currentBitmap, folderName, fileName, listener);
+    }
+
+    public int getImageWidth() {
+        return renderer.getImageWidth();
+    }
+
+    public int getImageHeight() {
+        return renderer.getImageHeight();
     }
 
     /**

@@ -22,7 +22,6 @@ import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.opengl.Matrix
 import jp.co.cyberagent.android.gpuimage.filter.*
-import java.util.*
 
 object GPUImageFilterTools {
     fun showDialog(
@@ -30,6 +29,7 @@ object GPUImageFilterTools {
         listener: (filter: GPUImageFilter) -> Unit
     ) {
         val filters = FilterList().apply {
+            addFilter("3DLUT File", FilterType.LOOKUP_FILE)
             addFilter("Contrast", FilterType.CONTRAST)
             addFilter("Invert", FilterType.INVERT)
             addFilter("Pixelation", FilterType.PIXELATION)
@@ -124,12 +124,14 @@ object GPUImageFilterTools {
             addFilter("Perlin Noise", GPUImageFilterTools.FilterType.PERLIN_NOISE)
 
             addFilter("Grain Noise", FilterType.GRAIN_NOISE)
+
+            this.sortBy { it.first }
         }
 
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Choose a filter")
-        builder.setItems(filters.names.toTypedArray()) { _, item ->
-            listener(createFilterForType(context, filters.filters[item]))
+        builder.setItems(filters.map { it.first }.toTypedArray()) { _, item ->
+            listener(createFilterForType(context, filters[item].second))
         }
         builder.create().show()
     }
@@ -313,6 +315,7 @@ object GPUImageFilterTools {
             FilterType.VIBRANCE -> GPUImageVibranceFilter()
             FilterType.PERLIN_NOISE -> GPUImagePerlinNoiseFilter()
             FilterType.GRAIN_NOISE -> GPUImageGrainNoiseFilter()
+            FilterType.LOOKUP_FILE -> GPUImageLookupFilter()
         }
     }
 
@@ -327,6 +330,7 @@ object GPUImageFilterTools {
         } catch (e: Exception) {
             e.printStackTrace()
             GPUImageFilter()
+
         }
     }
 
@@ -336,16 +340,14 @@ object GPUImageFilterTools {
         BLEND_DIFFERENCE, BLEND_DISSOLVE, BLEND_EXCLUSION, BLEND_SOURCE_OVER, BLEND_HARD_LIGHT, BLEND_LIGHTEN, BLEND_ADD, BLEND_DIVIDE, BLEND_MULTIPLY, BLEND_OVERLAY, BLEND_SCREEN, BLEND_ALPHA,
         BLEND_COLOR, BLEND_HUE, BLEND_SATURATION, BLEND_LUMINOSITY, BLEND_LINEAR_BURN, BLEND_SOFT_LIGHT, BLEND_SUBTRACT, BLEND_CHROMA_KEY, BLEND_NORMAL, LOOKUP_AMATORKA,
         GAUSSIAN_BLUR, CROSSHATCH, BOX_BLUR, CGA_COLORSPACE, DILATION, KUWAHARA, RGB_DILATION, SKETCH, TOON, SMOOTH_TOON, BULGE_DISTORTION, GLASS_SPHERE, HAZE, LAPLACIAN, NON_MAXIMUM_SUPPRESSION,
-        SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, PERLIN_NOISE, GRAIN_NOISE
+        SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, PERLIN_NOISE, GRAIN_NOISE,
+        LOOKUP_FILE
     }
 
-    private class FilterList {
-        val names: MutableList<String> = LinkedList()
-        val filters: MutableList<FilterType> = LinkedList()
+    private class FilterList : ArrayList<Pair<String, FilterType>>() {
 
         fun addFilter(name: String, filter: FilterType) {
-            names.add(name)
-            filters.add(filter)
+            this.add(Pair(name, filter))
         }
     }
 
@@ -392,6 +394,7 @@ object GPUImageFilterTools {
                 is GPUImageVibranceFilter -> VibranceAdjuster(filter)
                 is GPUImagePerlinNoiseFilter -> PerlinNoiseAdjuster(filter)
                 is GPUImageGrainNoiseFilter -> GrainNoiseAdjuster(filter)
+                is GPUImage3DLutTableFilter -> LookupFileAdjuster(filter)
                 else -> null
             }
         }
@@ -666,7 +669,11 @@ object GPUImageFilterTools {
             Adjuster<GPUImageTransformFilter>(filter) {
             override fun adjust(percentage: Int) {
                 val transform = FloatArray(16)
-                Matrix.setRotateM(transform, 0, (360 * percentage / 100).toFloat(), 0f, 0f, 1.0f)
+                val range = range(percentage, 0.5f, 1f)
+                Matrix.setIdentityM(transform, 0)
+//                Matrix.setRotateM(transform, 0, (360 * percentage / 100).toFloat(), 0f, 0f, 1.0f)
+//                Matrix.scaleM(transform, 0, range, range, 1.0f)
+                Matrix.translateM(transform, 0, range, range, 1.0f)
                 filter.transform3D = transform
             }
         }
@@ -703,6 +710,14 @@ object GPUImageFilterTools {
                 filter.setScale(range(percentage, 2000f, 2000f))
                 filter.setGrainAmount(range(percentage, 0f, 1f))
                 filter.setGrainSize(range(percentage, 1.5f, 2.5f))
+            }
+        }
+
+        private inner class LookupFileAdjuster(
+                filter: GPUImage3DLutTableFilter
+        ) : Adjuster<GPUImage3DLutTableFilter>(filter) {
+            override fun adjust(percentage: Int) {
+                filter.setIntensity(range(percentage, 0f, 1f))
             }
         }
     }
