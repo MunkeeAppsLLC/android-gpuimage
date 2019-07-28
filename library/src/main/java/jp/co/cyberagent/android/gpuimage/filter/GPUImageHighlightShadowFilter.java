@@ -83,4 +83,12 @@ public class GPUImageHighlightShadowFilter extends GPUImageFilter {
         this.shadows = shadows;
         setFloat(shadowsLocation, this.shadows);
     }
+
+    public float getShadows() {
+        return shadows;
+    }
+
+    public float getHighlights() {
+        return highlights;
+    }
 }

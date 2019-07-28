@@ -202,4 +202,20 @@ public class GPUImageGrainNoiseFilter extends GPUImageFilter {
         this.grainSize = grainSize;
         this.setFloat(grainSizeLocation, grainSize);
     }
+
+    public float getTime() {
+        return time;
+    }
+
+    public float getScale() {
+        return scale;
+    }
+
+    public float getGrainAmount() {
+        return grainAmount;
+    }
+
+    public float getGrainSize() {
+        return grainSize;
+    }
 }
