@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -89,6 +90,10 @@ public class GPUImageView extends FrameLayout {
         }
         addView(surfaceView);
         setRenderMode(RENDERMODE_WHEN_DIRTY);
+    }
+
+    public void setGpuMatrix(Matrix matrix) {
+        gpuImage.setMatrix(matrix);
     }
 
     @Override
@@ -446,8 +451,8 @@ public class GPUImageView extends FrameLayout {
     }
 
     public static class Size {
-        int width;
-        int height;
+        final int width;
+        final int height;
 
         public Size(int width, int height) {
             this.width = width;

@@ -25,6 +25,7 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -54,7 +55,13 @@ import jp.co.cyberagent.android.gpuimage.util.Rotation;
  */
 public class GPUImage {
 
-    public enum ScaleType {CENTER_INSIDE, CENTER_CROP}
+    public enum ScaleType {
+        CENTER_INSIDE,
+        CENTER_CROP,
+        MATRIX,
+        CENTER,
+        FIT_XY
+    }
 
     static final int SURFACE_TYPE_SURFACE_VIEW = 0;
     static final int SURFACE_TYPE_TEXTURE_VIEW = 1;
@@ -66,6 +73,9 @@ public class GPUImage {
     private GLTextureView glTextureView;
     private GPUImageFilter filter;
     private Bitmap currentBitmap;
+    private int displayWidth;
+    private int displayHeight;
+    private Matrix matrix = new Matrix();
     private ScaleType scaleType = ScaleType.CENTER_CROP;
 
     /**
@@ -81,6 +91,17 @@ public class GPUImage {
         this.context = context;
         filter = new GPUImageFilter();
         renderer = new GPUImageRenderer(filter);
+        this.initDisplaySize(context);
+    }
+
+    private void initDisplaySize(Context context) {
+        WindowManager windowManager =
+                (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        displayWidth = size.x;
+        displayHeight = size.y;
     }
 
     /**
@@ -253,6 +274,11 @@ public class GPUImage {
         requestRender();
     }
 
+    public void setMatrix(Matrix matrix) {
+        this.matrix = matrix;
+        renderer.setMatrix(matrix);
+    }
+
     /**
      * Sets the rotation of the displayed image.
      *
@@ -369,6 +395,7 @@ public class GPUImage {
         renderer.setRotation(Rotation.NORMAL,
                 this.renderer.isFlippedHorizontally(), this.renderer.isFlippedVertically());
         renderer.setScaleType(scaleType);
+        renderer.setMatrix(matrix);
         PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
         buffer.setRenderer(renderer);
         renderer.setImageBitmap(bitmap, recycle);
@@ -454,7 +481,7 @@ public class GPUImage {
      */
     public void saveToPictures(final Bitmap bitmap, final String folderName, final String fileName,
                                final OnPictureSavedListener listener) {
-        new SaveTask(bitmap, folderName, fileName, listener).execute();
+        new SaveTask(this, bitmap, folderName, fileName, listener).execute();
     }
 
     /**
@@ -466,43 +493,49 @@ public class GPUImage {
         renderer.runOnDrawEnd(runnable);
     }
 
-    private int getOutputWidth() {
-        if (renderer != null && renderer.getFrameWidth() != 0) {
-            return renderer.getFrameWidth();
+    private GPUImageView.Size getOutputSize(float imageWidth, float imageHeight) {
+        int outputWidth = displayWidth;
+        int outputHeight = displayHeight;
+        if (renderer != null && renderer.getFrameWidth() != 0 && renderer.getFrameHeight() != 0) {
+            int viewWidth = renderer.getFrameWidth();
+            int viewHeight = renderer.getFrameHeight();
+            if (viewWidth > viewHeight) {
+                if (imageWidth > imageHeight) {
+                    outputWidth = viewWidth;
+                    outputHeight = (int)(imageHeight * viewHeight / imageWidth);
+                } else {
+                    outputWidth = (int)(imageWidth * viewHeight / imageHeight);
+                    outputHeight = viewHeight;
+                }
+            } else {
+                if (imageWidth > imageHeight) {
+                    outputWidth = (int)(imageWidth * viewHeight / imageHeight);
+                    outputHeight = viewHeight;
+                } else {
+                    outputWidth = viewWidth;
+                    outputHeight = (int)(imageHeight * viewWidth / imageWidth);
+                }
+            }
         } else if (currentBitmap != null) {
-            return currentBitmap.getWidth();
-        } else {
-            WindowManager windowManager =
-                    (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            Display display = windowManager.getDefaultDisplay();
-            return display.getWidth();
+            return new GPUImageView.Size(currentBitmap.getWidth(), currentBitmap.getHeight());
         }
-    }
-
-    private int getOutputHeight() {
-        if (renderer != null && renderer.getFrameHeight() != 0) {
-            return renderer.getFrameHeight();
-        } else if (currentBitmap != null) {
-            return currentBitmap.getHeight();
-        } else {
-            WindowManager windowManager =
-                    (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            Display display = windowManager.getDefaultDisplay();
-            return display.getHeight();
-        }
+        return new GPUImageView.Size(outputWidth, outputHeight);
     }
 
     @Deprecated
-    private class SaveTask extends AsyncTask<Void, Void, Void> {
+    private static class SaveTask extends AsyncTask<Void, Void, Void> {
 
+        private GPUImage gpuImage;
         private final Bitmap bitmap;
         private final String folderName;
         private final String fileName;
         private final OnPictureSavedListener listener;
         private final Handler handler;
 
-        public SaveTask(final Bitmap bitmap, final String folderName, final String fileName,
+        public SaveTask(GPUImage gpuImage, final Bitmap bitmap,
+                        final String folderName, final String fileName,
                         final OnPictureSavedListener listener) {
+            this.gpuImage = gpuImage;
             this.bitmap = bitmap;
             this.folderName = folderName;
             this.fileName = fileName;
@@ -512,7 +545,7 @@ public class GPUImage {
 
         @Override
         protected Void doInBackground(final Void... params) {
-            Bitmap result = getBitmapWithFilterApplied(bitmap);
+            Bitmap result = gpuImage.getBitmapWithFilterApplied(bitmap);
             saveImage(folderName, fileName, result);
             return null;
         }
@@ -523,7 +556,7 @@ public class GPUImage {
             try {
                 file.getParentFile().mkdirs();
                 image.compress(CompressFormat.JPEG, 80, new FileOutputStream(file));
-                MediaScannerConnection.scanFile(context,
+                MediaScannerConnection.scanFile(gpuImage.context,
                         new String[]{
                                 file.toString()
                         }, null,
@@ -551,7 +584,7 @@ public class GPUImage {
         void onPictureSaved(Uri uri);
     }
 
-    private class LoadImageUriTask extends LoadImageTask {
+    private static class LoadImageUriTask extends LoadImageTask {
 
         private final Uri uri;
 
@@ -567,9 +600,10 @@ public class GPUImage {
                 if (uri.getScheme().startsWith("http") || uri.getScheme().startsWith("https")) {
                     inputStream = new URL(uri.toString()).openStream();
                 } else if (uri.getPath().startsWith("/android_asset/")) {
-                    inputStream = context.getAssets().open(uri.getPath().substring(("/android_asset/").length()));
+                    inputStream = gpuImage.context.getAssets().open(uri.getPath().substring((
+                            "/android_asset/").length()));
                 } else {
-                    inputStream = context.getContentResolver().openInputStream(uri);
+                    inputStream = gpuImage.context.getContentResolver().openInputStream(uri);
                 }
                 return BitmapFactory.decodeStream(inputStream, null, options);
             } catch (Exception e) {
@@ -580,7 +614,7 @@ public class GPUImage {
 
         @Override
         protected int getImageOrientation() throws IOException {
-            Cursor cursor = context.getContentResolver().query(uri,
+            Cursor cursor = gpuImage.context.getContentResolver().query(uri,
                     new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
 
             if (cursor == null || cursor.getCount() != 1) {
@@ -594,7 +628,7 @@ public class GPUImage {
         }
     }
 
-    private class LoadImageFileTask extends LoadImageTask {
+    private static class LoadImageFileTask extends LoadImageTask {
 
         private final File imageFile;
 
@@ -627,11 +661,9 @@ public class GPUImage {
         }
     }
 
-    private abstract class LoadImageTask extends AsyncTask<Void, Void, Bitmap> {
+    private static abstract class LoadImageTask extends AsyncTask<Void, Void, Bitmap> {
 
-        private final GPUImage gpuImage;
-        private int outputWidth;
-        private int outputHeight;
+        protected final GPUImage gpuImage;
 
         public LoadImageTask(final GPUImage gpuImage) {
             this.gpuImage = gpuImage;
@@ -639,17 +671,15 @@ public class GPUImage {
 
         @Override
         protected Bitmap doInBackground(Void... params) {
-            if (renderer != null && renderer.getFrameWidth() == 0) {
+            if (gpuImage.renderer != null && gpuImage.renderer.getImageWidth() == 0) {
                 try {
-                    synchronized (renderer.surfaceChangedWaiter) {
-                        renderer.surfaceChangedWaiter.wait(3000);
+                    synchronized (gpuImage.renderer.surfaceChangedWaiter) {
+                        gpuImage.renderer.surfaceChangedWaiter.wait(3000);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            outputWidth = getOutputWidth();
-            outputHeight = getOutputHeight();
             return loadResizedImage();
         }
 
@@ -666,8 +696,16 @@ public class GPUImage {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             decode(options);
+
+            GPUImageView.Size outputSize
+                    = gpuImage.getOutputSize(options.outWidth, options.outHeight);
+
             int scale = 1;
-            while (checkSize(options.outWidth / scale > outputWidth, options.outHeight / scale > outputHeight)) {
+            boolean widthBigger = options.outWidth / scale > outputSize.width;
+            boolean heightBigger = options.outHeight / scale > outputSize.height;
+            while (checkSize(widthBigger, heightBigger, gpuImage.scaleType)) {
+                widthBigger = options.outWidth / scale > outputSize.width;
+                heightBigger = options.outHeight / scale > outputSize.height;
                 scale++;
             }
 
@@ -685,15 +723,16 @@ public class GPUImage {
                 return null;
             }
             bitmap = rotateImage(bitmap);
-            bitmap = scaleBitmap(bitmap);
+            bitmap = scaleBitmap(bitmap, outputSize, gpuImage.scaleType);
             return bitmap;
         }
 
-        private Bitmap scaleBitmap(Bitmap bitmap) {
+        private Bitmap scaleBitmap(Bitmap bitmap,
+                                   GPUImageView.Size outputSize, ScaleType scaleType) {
             // resize to desired dimensions
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
-            int[] newSize = getScaleSize(width, height);
+            int[] newSize = getScaleSize(width, height, outputSize, scaleType);
             Bitmap workBitmap = Bitmap.createScaledBitmap(bitmap, newSize[0], newSize[1], true);
             if (workBitmap != bitmap) {
                 bitmap.recycle();
@@ -703,8 +742,8 @@ public class GPUImage {
 
             if (scaleType == ScaleType.CENTER_CROP) {
                 // Crop it
-                int diffWidth = newSize[0] - outputWidth;
-                int diffHeight = newSize[1] - outputHeight;
+                int diffWidth = newSize[0] - outputSize.width;
+                int diffHeight = newSize[1] - outputSize.height;
                 workBitmap = Bitmap.createBitmap(bitmap, diffWidth / 2, diffHeight / 2,
                         newSize[0] - diffWidth, newSize[1] - diffHeight);
                 if (workBitmap != bitmap) {
@@ -722,27 +761,29 @@ public class GPUImage {
          * If CROP: sides are same size or bigger than output's sides<br>
          * Else   : sides are same size or smaller than output's sides
          */
-        private int[] getScaleSize(int width, int height) {
+        private int[] getScaleSize(int width, int height,
+                                   GPUImageView.Size outputSize, ScaleType scaleType) {
             float newWidth;
             float newHeight;
 
-            float withRatio = (float) width / outputWidth;
-            float heightRatio = (float) height / outputHeight;
+            float withRatio = (float) width / outputSize.width;
+            float heightRatio = (float) height / outputSize.height;
 
             boolean adjustWidth = scaleType == ScaleType.CENTER_CROP
-                    ? withRatio > heightRatio : withRatio < heightRatio;
+                    ? withRatio > heightRatio
+                    : withRatio < heightRatio;
 
             if (adjustWidth) {
-                newHeight = outputHeight;
+                newHeight = outputSize.height;
                 newWidth = (newHeight / height) * width;
             } else {
-                newWidth = outputWidth;
+                newWidth = outputSize.width;
                 newHeight = (newWidth / width) * height;
             }
             return new int[]{Math.round(newWidth), Math.round(newHeight)};
         }
 
-        private boolean checkSize(boolean widthBigger, boolean heightBigger) {
+        private boolean checkSize(boolean widthBigger, boolean heightBigger, ScaleType scaleType) {
             if (scaleType == ScaleType.CENTER_CROP) {
                 return widthBigger && heightBigger;
             } else {

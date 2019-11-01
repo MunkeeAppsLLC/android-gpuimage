@@ -47,7 +47,8 @@ public class TextureRotationUtil {
     private TextureRotationUtil() {
     }
 
-    public static float[] getRotation(final Rotation rotation, final boolean flipHorizontal,
+    public static float[] getRotation(final Rotation rotation,
+                                      final boolean flipHorizontal,
                                       final boolean flipVertical) {
         float[] rotatedTex;
         switch (rotation) {

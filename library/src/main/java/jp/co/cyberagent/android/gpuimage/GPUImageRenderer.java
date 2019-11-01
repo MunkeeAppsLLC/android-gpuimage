@@ -18,6 +18,7 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
@@ -44,7 +45,16 @@ import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
 public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.Renderer, PreviewCallback {
+
     private static final int NO_IMAGE = -1;
+
+    public static final float ZERO[] = {
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+    };
+
     public static final float CUBE[] = {
             -1.0f, -1.0f,
             1.0f, -1.0f,
@@ -74,6 +84,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     private boolean flipHorizontal;
     private boolean flipVertical;
     private GPUImage.ScaleType scaleType = GPUImage.ScaleType.CENTER_CROP;
+    private Matrix matrix = new Matrix();
 
     private float backgroundRed = 0f;
     private float backgroundGreen = 0f;
@@ -88,7 +99,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         glCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer();
-        glCubeBuffer.put(CUBE).position(0);
+        glCubeBuffer.put(ZERO).position(0);
 
         glTextureBuffer = ByteBuffer.allocateDirect(TEXTURE_NO_ROTATION.length * 4)
                 .order(ByteOrder.nativeOrder())
@@ -107,6 +118,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
         outputWidth = width;
         outputHeight = height;
+
         GLES20.glViewport(0, 0, width, height);
         GLES20.glUseProgram(filter.getProgram());
         filter.onOutputSizeChanged(width, height);
@@ -265,56 +277,94 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         this.scaleType = scaleType;
     }
 
+    public void setMatrix(Matrix matrix) {
+        this.matrix = matrix;
+        adjustImageScaling();
+    }
+
     protected int getFrameWidth() {
-        return outputWidth;
+        return imageWidth;
     }
 
     protected int getFrameHeight() {
-        return outputHeight;
+        return imageHeight;
     }
 
     private void adjustImageScaling() {
-        float outputWidth = this.outputWidth;
-        float outputHeight = this.outputHeight;
-        if (rotation == Rotation.ROTATION_270 || rotation == Rotation.ROTATION_90) {
-            outputWidth = this.outputHeight;
-            outputHeight = this.outputWidth;
+
+        if (outputWidth > 0 && outputHeight > 0 && imageWidth > 0 && imageHeight > 0) {
+            float outputWidth = this.outputWidth;
+            float outputHeight = this.outputHeight;
+            if (rotation == Rotation.ROTATION_270 || rotation == Rotation.ROTATION_90) {
+                outputWidth = this.outputHeight;
+                outputHeight = this.outputWidth;
+            }
+
+            float ratio1 = outputWidth / imageWidth;
+            float ratio2 = outputHeight / imageHeight;
+            float ratioMax = Math.max(ratio1, ratio2);
+            int imageWidthNew = Math.round(imageWidth * ratioMax);
+            int imageHeightNew = Math.round(imageHeight * ratioMax);
+
+            float ratioWidth = imageWidthNew / outputWidth;
+            float ratioHeight = imageHeightNew / outputHeight;
+
+            float[] cube = CUBE;
+            float[] textureCords = TextureRotationUtil.getRotation(rotation, flipHorizontal, flipVertical);
+
+            switch (scaleType) {
+                case CENTER_INSIDE: {
+                    cube = new float[]{
+                            CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
+                            CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
+                            CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
+                            CUBE[6] / ratioHeight, CUBE[7] / ratioWidth,
+                    };
+                }
+                break;
+                case CENTER_CROP: {
+                    float distHorizontal = (1 - 1 / ratioWidth) / 2;
+                    float distVertical = (1 - 1 / ratioHeight) / 2;
+                    textureCords = new float[]{
+                            addDistance(textureCords[0], distHorizontal), addDistance(textureCords[1], distVertical),
+                            addDistance(textureCords[2], distHorizontal), addDistance(textureCords[3], distVertical),
+                            addDistance(textureCords[4], distHorizontal), addDistance(textureCords[5], distVertical),
+                            addDistance(textureCords[6], distHorizontal), addDistance(textureCords[7], distVertical),
+                    };
+                }
+                break;
+                case MATRIX: {
+                    matrix.mapPoints(textureCords);
+                    cube = new float[]{
+                            CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
+                            CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
+                            CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
+                            CUBE[6] / ratioHeight, CUBE[7] / ratioWidth,
+                    };
+                }
+                break;
+                case FIT_XY: {
+                    matrix.mapPoints(textureCords);
+                }
+                break;
+                case CENTER: {
+                    cube = new float[]{
+                            CUBE[0] * ratioWidth, CUBE[1] * ratioHeight,
+                            CUBE[2] * ratioWidth, CUBE[3] * ratioHeight,
+                            CUBE[4] * ratioWidth, CUBE[5] * ratioHeight,
+                            CUBE[6] * ratioWidth, CUBE[7] * ratioHeight,
+                    };
+                }
+                break;
+            }
+            glCubeBuffer.clear();
+            glCubeBuffer.put(cube).position(0);
+            glTextureBuffer.clear();
+            glTextureBuffer.put(textureCords).position(0);
         }
 
-        float ratio1 = outputWidth / imageWidth;
-        float ratio2 = outputHeight / imageHeight;
-        float ratioMax = Math.max(ratio1, ratio2);
-        int imageWidthNew = Math.round(imageWidth * ratioMax);
-        int imageHeightNew = Math.round(imageHeight * ratioMax);
-
-        float ratioWidth = imageWidthNew / outputWidth;
-        float ratioHeight = imageHeightNew / outputHeight;
-
-        float[] cube = CUBE;
-        float[] textureCords = TextureRotationUtil.getRotation(rotation, flipHorizontal, flipVertical);
-        if (scaleType == GPUImage.ScaleType.CENTER_CROP) {
-            float distHorizontal = (1 - 1 / ratioWidth) / 2;
-            float distVertical = (1 - 1 / ratioHeight) / 2;
-            textureCords = new float[]{
-                    addDistance(textureCords[0], distHorizontal), addDistance(textureCords[1], distVertical),
-                    addDistance(textureCords[2], distHorizontal), addDistance(textureCords[3], distVertical),
-                    addDistance(textureCords[4], distHorizontal), addDistance(textureCords[5], distVertical),
-                    addDistance(textureCords[6], distHorizontal), addDistance(textureCords[7], distVertical),
-            };
-        } else {
-            cube = new float[]{
-                    CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
-                    CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
-                    CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
-                    CUBE[6] / ratioHeight, CUBE[7] / ratioWidth,
-            };
-        }
-
-        glCubeBuffer.clear();
-        glCubeBuffer.put(cube).position(0);
-        glTextureBuffer.clear();
-        glTextureBuffer.put(textureCords).position(0);
     }
+
 
     private float addDistance(float coordinate, float distance) {
         return coordinate == 0.0f ? distance : 1 - distance;
