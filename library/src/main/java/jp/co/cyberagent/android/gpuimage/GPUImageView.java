@@ -450,6 +450,14 @@ public class GPUImageView extends FrameLayout {
         }
     }
 
+    public void enqueueOnImageLoaded(Runnable runnable) {
+        gpuImage.enqueueOnImageLoaded(runnable);
+    }
+
+    public void clearOnImageLoadedQueue(Runnable runnable) {
+        gpuImage.clearOnImageLoadedQueue(runnable);
+    }
+
     public static class Size {
         final int width;
         final int height;

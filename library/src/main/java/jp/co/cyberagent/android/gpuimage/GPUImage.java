@@ -45,6 +45,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
 import jp.co.cyberagent.android.gpuimage.util.Rotation;
@@ -77,6 +79,8 @@ public class GPUImage {
     private int displayHeight;
     private Matrix matrix = new Matrix();
     private ScaleType scaleType = ScaleType.CENTER_CROP;
+
+    private Queue<Runnable> runOnImageLoaded = new ConcurrentLinkedQueue<>();
 
     /**
      * Instantiates a new GPUImage object.
@@ -532,6 +536,19 @@ public class GPUImage {
         return new GPUImageView.Size(outputWidth, outputHeight);
     }
 
+    public void enqueueOnImageLoaded(final Runnable runnable) {
+        runOnImageLoaded.add(runnable);
+        if (currentBitmap != null) {
+            while(!runOnImageLoaded.isEmpty()) {
+                runOnImageLoaded.poll().run();
+            }
+        }
+    }
+
+    public void clearOnImageLoadedQueue(final Runnable runnable) {
+        runOnImageLoaded.clear();
+    }
+
     @Deprecated
     private static class SaveTask extends AsyncTask<Void, Void, Void> {
 
@@ -592,6 +609,10 @@ public class GPUImage {
 
     public interface OnPictureSavedListener {
         void onPictureSaved(Uri uri);
+    }
+
+    public interface OnImageLoaded {
+        void onImageLoaded();
     }
 
     private static class LoadImageUriTask extends LoadImageTask {
@@ -689,6 +710,9 @@ public class GPUImage {
             super.onPostExecute(bitmap);
             gpuImage.deleteImage();
             gpuImage.setImage(bitmap);
+            while (!gpuImage.runOnImageLoaded.isEmpty()) {
+                gpuImage.runOnImageLoaded.poll().run();
+            }
         }
 
         protected abstract Bitmap decode(BitmapFactory.Options options);

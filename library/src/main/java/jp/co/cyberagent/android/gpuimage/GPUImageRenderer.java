@@ -31,7 +31,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -77,8 +76,8 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     private int imageHeight;
     private int addedPadding;
 
-    private final Queue<Runnable> runOnDraw;
-    private final Queue<Runnable> runOnDrawEnd;
+    private final Queue<Runnable> runOnDraw = new ConcurrentLinkedQueue<>();
+    private final Queue<Runnable> runOnDrawEnd = new ConcurrentLinkedQueue<>();
     private final Queue<Runnable> runOnSurfaceChanged = new ConcurrentLinkedQueue<>();
     private Rotation rotation;
     private boolean flipHorizontal;
@@ -93,8 +92,6 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     public GPUImageRenderer(final GPUImageFilter filter) {
         this.filter = filter;
-        runOnDraw = new LinkedList<>();
-        runOnDrawEnd = new LinkedList<>();
 
         glCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
                 .order(ByteOrder.nativeOrder())
@@ -151,10 +148,8 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     }
 
     private void runAll(Queue<Runnable> queue) {
-        synchronized (queue) {
-            while (!queue.isEmpty()) {
-                queue.poll().run();
-            }
+        while (!queue.isEmpty()) {
+            queue.poll().run();
         }
     }
 
@@ -404,6 +399,10 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     protected void enqueueOnSurfaceChanged(final Runnable runnable) {
         runOnSurfaceChanged.add(runnable);
+        //run them already if onSurfaceChanged has already been called
+        if (outputWidth < 0 && outputHeight < 0) {
+            runAll(runOnSurfaceChanged);
+        }
     }
 
     protected void runOnDrawEnd(final Runnable runnable) {
