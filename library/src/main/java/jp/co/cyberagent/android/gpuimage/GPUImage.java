@@ -312,7 +312,12 @@ public class GPUImage {
      * @param uri the uri of the new image
      */
     public void setImage(final Uri uri) {
-        new LoadImageUriTask(this, uri).execute();
+        renderer.enqueueOnSurfaceChanged(new Runnable() {
+            @Override
+            public void run() {
+                new LoadImageUriTask(GPUImage.this, uri).execute();
+            }
+        });
     }
 
     /**
@@ -321,7 +326,12 @@ public class GPUImage {
      * @param file the file of the new image
      */
     public void setImage(final File file) {
-        new LoadImageFileTask(this, file).execute();
+        renderer.enqueueOnSurfaceChanged(new Runnable() {
+            @Override
+            public void run() {
+                new LoadImageFileTask(GPUImage.this, file).execute();
+            }
+        });
     }
 
     private String getPath(final Uri uri) {
@@ -671,15 +681,6 @@ public class GPUImage {
 
         @Override
         protected Bitmap doInBackground(Void... params) {
-            if (gpuImage.renderer != null && gpuImage.renderer.getImageWidth() == 0) {
-                try {
-                    synchronized (gpuImage.renderer.surfaceChangedWaiter) {
-                        gpuImage.renderer.surfaceChangedWaiter.wait(3000);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
             return loadResizedImage();
         }
 

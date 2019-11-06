@@ -33,6 +33,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -64,8 +65,6 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     private GPUImageFilter filter;
 
-    public final Object surfaceChangedWaiter = new Object();
-
     private int glTextureId = NO_IMAGE;
     private SurfaceTexture surfaceTexture = null;
     private final FloatBuffer glCubeBuffer;
@@ -80,6 +79,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     private final Queue<Runnable> runOnDraw;
     private final Queue<Runnable> runOnDrawEnd;
+    private final Queue<Runnable> runOnSurfaceChanged = new ConcurrentLinkedQueue<>();
     private Rotation rotation;
     private boolean flipHorizontal;
     private boolean flipVertical;
@@ -118,14 +118,11 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
         outputWidth = width;
         outputHeight = height;
-
         GLES20.glViewport(0, 0, width, height);
         GLES20.glUseProgram(filter.getProgram());
         filter.onOutputSizeChanged(width, height);
         adjustImageScaling();
-        synchronized (surfaceChangedWaiter) {
-            surfaceChangedWaiter.notifyAll();
-        }
+        runAll(runOnSurfaceChanged);
     }
 
     @Override
@@ -403,6 +400,10 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         synchronized (runOnDraw) {
             runOnDraw.add(runnable);
         }
+    }
+
+    protected void enqueueOnSurfaceChanged(final Runnable runnable) {
+        runOnSurfaceChanged.add(runnable);
     }
 
     protected void runOnDrawEnd(final Runnable runnable) {
