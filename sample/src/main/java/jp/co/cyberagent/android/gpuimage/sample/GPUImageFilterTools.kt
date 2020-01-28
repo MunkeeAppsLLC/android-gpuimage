@@ -315,7 +315,7 @@ object GPUImageFilterTools {
             FilterType.PERLIN_NOISE -> GPUImagePerlinNoiseFilter()
             FilterType.GRAIN_NOISE -> GPUImageGrainNoiseFilter()
             FilterType.LUT_3D -> GPUImageLookupFilter()
-            FilterType.LOOKUP_FILE -> GPUImage3DLutTableFilter(17).apply {
+            FilterType.LOOKUP_FILE -> GPUImage3DLutTableFilter(64).apply {
 //                val inputStream = context.assets.open("lookup.png")
 //                val bitmap = BitmapFactory.decodeStream(inputStream)
                 val bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.lookup)
