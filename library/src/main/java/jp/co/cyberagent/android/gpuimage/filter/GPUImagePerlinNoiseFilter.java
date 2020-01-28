@@ -1,6 +1,6 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 
 /**
  * Performs a Perlin Noise effect
@@ -133,11 +133,11 @@ public class GPUImagePerlinNoiseFilter extends GPUImageFilter {
     @Override
     public void onInit() {
         super.onInit();
-        scaleLocation = GLES20.glGetUniformLocation(getProgram(), "scale");
-        noiseLevelLocation = GLES20.glGetUniformLocation(getProgram(), "noiseLevel");
-        opacityLocation = GLES20.glGetUniformLocation(getProgram(), "opacity");
-        startClolorLocation = GLES20.glGetUniformLocation(getProgram(), "colorStart");
-        endColorLocation = GLES20.glGetUniformLocation(getProgram(), "colorFinish");
+        scaleLocation = GLES30.glGetUniformLocation(getProgram(), "scale");
+        noiseLevelLocation = GLES30.glGetUniformLocation(getProgram(), "noiseLevel");
+        opacityLocation = GLES30.glGetUniformLocation(getProgram(), "opacity");
+        startClolorLocation = GLES30.glGetUniformLocation(getProgram(), "colorStart");
+        endColorLocation = GLES30.glGetUniformLocation(getProgram(), "colorFinish");
     }
 
     @Override

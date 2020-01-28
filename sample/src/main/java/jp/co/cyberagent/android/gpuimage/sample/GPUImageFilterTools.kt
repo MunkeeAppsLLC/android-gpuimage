@@ -22,8 +22,10 @@ import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.opengl.Matrix
 import jp.co.cyberagent.android.gpuimage.filter.*
+import jp.co.cyberagent.android.gpuimage.filter.lookup3d.GPUImage3DLutTableFilter
 
 object GPUImageFilterTools {
+
     fun showDialog(
         context: Context,
         listener: (filter: GPUImageFilter) -> Unit
@@ -283,9 +285,6 @@ object GPUImageFilterTools {
                 GPUImageNormalBlendFilter::class.java
             )
 
-            FilterType.LOOKUP_AMATORKA -> GPUImageLookupFilter().apply {
-                bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.lookup_amatorka)
-            }
             FilterType.GAUSSIAN_BLUR -> GPUImageGaussianBlurFilter()
             FilterType.CROSSHATCH -> GPUImageCrosshatchFilter()
             FilterType.BOX_BLUR -> GPUImageBoxBlurFilter()
@@ -315,8 +314,21 @@ object GPUImageFilterTools {
             FilterType.VIBRANCE -> GPUImageVibranceFilter()
             FilterType.PERLIN_NOISE -> GPUImagePerlinNoiseFilter()
             FilterType.GRAIN_NOISE -> GPUImageGrainNoiseFilter()
-            FilterType.LOOKUP_FILE -> GPUImageLookupFilter()
+            FilterType.LUT_3D -> GPUImageLookupFilter()
+            FilterType.LOOKUP_FILE -> GPUImage3DLutTableFilter(17).apply {
+//                val inputStream = context.assets.open("lookup.png")
+//                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.lookup)
+                val pixels = IntArray(bitmap.width * bitmap.height)
+                bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                setTexture(pixels, 64)
+            }
+            FilterType.LOOKUP_AMATORKA -> GPUImageLookupFilter().apply {
+                bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.lookup_amatorka)
+            }
+
         }
+
     }
 
     private fun createBlendFilter(
@@ -330,7 +342,6 @@ object GPUImageFilterTools {
         } catch (e: Exception) {
             e.printStackTrace()
             GPUImageFilter()
-
         }
     }
 
@@ -341,7 +352,8 @@ object GPUImageFilterTools {
         BLEND_COLOR, BLEND_HUE, BLEND_SATURATION, BLEND_LUMINOSITY, BLEND_LINEAR_BURN, BLEND_SOFT_LIGHT, BLEND_SUBTRACT, BLEND_CHROMA_KEY, BLEND_NORMAL, LOOKUP_AMATORKA,
         GAUSSIAN_BLUR, CROSSHATCH, BOX_BLUR, CGA_COLORSPACE, DILATION, KUWAHARA, RGB_DILATION, SKETCH, TOON, SMOOTH_TOON, BULGE_DISTORTION, GLASS_SPHERE, HAZE, LAPLACIAN, NON_MAXIMUM_SUPPRESSION,
         SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, PERLIN_NOISE, GRAIN_NOISE,
-        LOOKUP_FILE
+        LOOKUP_FILE,
+        LUT_3D
     }
 
     private class FilterList : ArrayList<Pair<String, FilterType>>() {
@@ -395,6 +407,7 @@ object GPUImageFilterTools {
                 is GPUImagePerlinNoiseFilter -> PerlinNoiseAdjuster(filter)
                 is GPUImageGrainNoiseFilter -> GrainNoiseAdjuster(filter)
                 is GPUImage3DLutTableFilter -> LookupFileAdjuster(filter)
+                is GPUImageLookupFilter -> LookupFileAdjuster2(filter)
                 else -> null
             }
         }
@@ -716,6 +729,14 @@ object GPUImageFilterTools {
         private inner class LookupFileAdjuster(
                 filter: GPUImage3DLutTableFilter
         ) : Adjuster<GPUImage3DLutTableFilter>(filter) {
+            override fun adjust(percentage: Int) {
+                filter.setIntensity(range(percentage, 0f, 1f))
+            }
+        }
+
+        private inner class LookupFileAdjuster2(
+                filter: GPUImageLookupFilter
+        ) : Adjuster<GPUImageLookupFilter>(filter) {
             override fun adjust(percentage: Int) {
                 filter.setIntensity(range(percentage, 0f, 1f))
             }

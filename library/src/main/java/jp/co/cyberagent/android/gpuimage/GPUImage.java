@@ -130,7 +130,7 @@ public class GPUImage {
     public void setGLSurfaceView(final GLSurfaceView view) {
         surfaceType = SURFACE_TYPE_SURFACE_VIEW;
         glSurfaceView = view;
-        glSurfaceView.setEGLContextClientVersion(2);
+        glSurfaceView.setEGLContextClientVersion(3);
         glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         glSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
         glSurfaceView.setRenderer(renderer);
@@ -148,7 +148,7 @@ public class GPUImage {
     public void setGLTextureView(final GLTextureView view) {
         surfaceType = SURFACE_TYPE_TEXTURE_VIEW;
         glTextureView = view;
-        glTextureView.setEGLContextClientVersion(2);
+        glTextureView.setEGLContextClientVersion(3);
         glTextureView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         glTextureView.setOpaque(false);
         glTextureView.setRenderer(renderer);

@@ -23,7 +23,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 
 import java.io.IOException;
@@ -106,8 +106,8 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     @Override
     public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
-        GLES20.glClearColor(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha);
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+        GLES30.glClearColor(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha);
+        GLES30.glDisable(GLES30.GL_DEPTH_TEST);
         filter.ifNeedInit();
     }
 
@@ -115,8 +115,8 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
         outputWidth = width;
         outputHeight = height;
-        GLES20.glViewport(0, 0, width, height);
-        GLES20.glUseProgram(filter.getProgram());
+        GLES30.glViewport(0, 0, width, height);
+        GLES30.glUseProgram(filter.getProgram());
         filter.onOutputSizeChanged(width, height);
         adjustImageScaling();
         runAll(runOnSurfaceChanged);
@@ -124,7 +124,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     @Override
     public void onDrawFrame(final GL10 gl) {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         runAll(runOnDraw);
         filter.onDraw(glTextureId, glCubeBuffer, glTextureBuffer);
         runAll(runOnDrawEnd);
@@ -185,7 +185,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
             @Override
             public void run() {
                 int[] textures = new int[1];
-                GLES20.glGenTextures(1, textures, 0);
+                GLES30.glGenTextures(1, textures, 0);
                 surfaceTexture = new SurfaceTexture(textures[0]);
                 try {
                     camera.setPreviewTexture(surfaceTexture);
@@ -209,7 +209,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
                     oldFilter.destroy();
                 }
                 GPUImageRenderer.this.filter.ifNeedInit();
-                GLES20.glUseProgram(GPUImageRenderer.this.filter.getProgram());
+                GLES30.glUseProgram(GPUImageRenderer.this.filter.getProgram());
                 GPUImageRenderer.this.filter.onOutputSizeChanged(outputWidth, outputHeight);
             }
         });
@@ -220,7 +220,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
             @Override
             public void run() {
-                GLES20.glDeleteTextures(1, new int[]{
+                GLES30.glDeleteTextures(1, new int[]{
                         glTextureId
                 }, 0);
                 glTextureId = NO_IMAGE;
@@ -400,7 +400,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     protected void enqueueOnSurfaceChanged(final Runnable runnable) {
         runOnSurfaceChanged.add(runnable);
         //run them already if onSurfaceChanged has already been called
-        if (outputWidth < 0 && outputHeight < 0) {
+        if (outputWidth > 0 && outputHeight > 0) {
             runAll(runOnSurfaceChanged);
         }
     }

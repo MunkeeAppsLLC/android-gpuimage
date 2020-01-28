@@ -16,45 +16,42 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES30;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
-public class GPUImageTwoInputFilter extends GPUImageFilter {
+public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     private static final String VERTEX_SHADER = "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
             "attribute vec4 inputTextureCoordinate2;\n" +
             " \n" +
             "varying vec2 textureCoordinate;\n" +
-            "varying vec2 textureCoordinate2;\n" +
+            "varying vec3 textureCoordinate2;\n" +
             " \n" +
             "void main()\n" +
             "{\n" +
             "    gl_Position = position;\n" +
             "    textureCoordinate = inputTextureCoordinate.xy;\n" +
-            "    textureCoordinate2 = inputTextureCoordinate2.xy;\n" +
+            "    textureCoordinate2 = inputTextureCoordinate2.xyz;\n" +
             "}";
 
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
     private int filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
-    private ByteBuffer texture2CoordinatesBuffer;
-    private Bitmap bitmap;
+    private int[] texture;
+    private int dimension;
 
-    public GPUImageTwoInputFilter(String fragmentShader) {
+    public GPUImage3DSamplerInputFilter(String fragmentShader) {
         this(VERTEX_SHADER, fragmentShader);
     }
 
-    public GPUImageTwoInputFilter(String vertexShader, String fragmentShader) {
+    public GPUImage3DSamplerInputFilter(String vertexShader, String fragmentShader) {
         super(vertexShader, fragmentShader);
-        setRotation(Rotation.NORMAL, false, false);
     }
 
     @Override
@@ -69,45 +66,51 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     @Override
     public void onInitialized() {
         super.onInitialized();
-        if (bitmap != null && !bitmap.isRecycled()) {
-            setBitmap(bitmap);
+        if (texture != null) {
+            setTexture(texture, dimension);
         }
     }
 
-    public void setBitmap(final Bitmap bitmap) {
-        if (bitmap != null && bitmap.isRecycled()) {
-            return;
-        }
-        this.bitmap = bitmap;
-        if (this.bitmap == null) {
+    public void setTexture(final int[] texture, final int dimension) {
+        this.texture = texture;
+        this.dimension = dimension;
+        if (this.texture == null || texture.length == 0 || dimension <= 0
+                || dimension * dimension * dimension != texture.length) {
             return;
         }
         runOnDraw(new Runnable() {
             public void run() {
                 if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
-                    if (bitmap == null || bitmap.isRecycled()) {
+                    if (texture == null || texture.length == 0 || dimension <= 0
+                            || dimension * dimension * dimension != texture.length) {
                         return;
                     }
                     GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
-                    filterSourceTexture2 = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, false);
+                    Log.e("OpenGLUtils", "0 "+GLES30.glGetError());
+                    IntBuffer texBuffer = (IntBuffer) ByteBuffer.allocateDirect(texture.length * Integer.SIZE)
+                            .order(ByteOrder.nativeOrder())
+                            .asIntBuffer()
+                            .put(texture)
+                            .position(0);
+                    filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, dimension, dimension, dimension,
+                            OpenGlUtils.NO_TEXTURE);
                 }
             }
         });
     }
 
-    public Bitmap getBitmap() {
-        return bitmap;
+    public int[] getTexture() {
+        return texture;
     }
 
-    public void recycleBitmap() {
-        if (bitmap != null && !bitmap.isRecycled()) {
-            bitmap.recycle();
-            bitmap = null;
-        }
+    public void clearTexture() {
+        this.texture = null;
+        this.dimension = 0;
     }
 
     public void onDestroy() {
         super.onDestroy();
+        clearTexture();
         GLES30.glDeleteTextures(1, new int[]{
                 filterSourceTexture2
         }, 0);
@@ -118,21 +121,11 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     protected void onDrawArraysPre() {
         GLES30.glEnableVertexAttribArray(filterSecondTextureCoordinateAttribute);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, filterSourceTexture2);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, filterSourceTexture2);
         GLES30.glUniform1i(filterInputTextureUniform2, 3);
-
-        texture2CoordinatesBuffer.position(0);
-        GLES30.glVertexAttribPointer(filterSecondTextureCoordinateAttribute, 2, GLES30.GL_FLOAT, false, 0, texture2CoordinatesBuffer);
     }
 
-    public void setRotation(final Rotation rotation, final boolean flipHorizontal, final boolean flipVertical) {
-        float[] buffer = TextureRotationUtil.getRotation(rotation, flipHorizontal, flipVertical);
-
-        ByteBuffer bBuffer = ByteBuffer.allocateDirect(32).order(ByteOrder.nativeOrder());
-        FloatBuffer fBuffer = bBuffer.asFloatBuffer();
-        fBuffer.put(buffer);
-        fBuffer.flip();
-
-        texture2CoordinatesBuffer = bBuffer;
+    public int getDimension() {
+        return dimension;
     }
 }

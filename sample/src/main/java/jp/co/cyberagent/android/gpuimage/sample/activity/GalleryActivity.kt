@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage.sample.activity
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -25,8 +26,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import jp.co.cyberagent.android.gpuimage.GPUImageView
-import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DLutTableFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import jp.co.cyberagent.android.gpuimage.filter.lookup3d.GPUImage3DLutTableFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -68,6 +69,7 @@ class GalleryActivity : AppCompatActivity() {
         when (requestCode) {
             REQUEST_PICK_IMAGE -> if (resultCode == RESULT_OK) {
                 gpuImageView.setImage(data!!.data)
+                gpuImageView.postInvalidate()
             } else {
                 finish()
             }
@@ -85,7 +87,7 @@ class GalleryActivity : AppCompatActivity() {
     private fun saveImage() {
         val fileName = System.currentTimeMillis().toString() + ".jpg"
         gpuImageView.saveToPictures("GPUImage", fileName) { uri ->
-            Toast.makeText(this, "Saved: " + uri.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Saved: $uri", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -100,7 +102,11 @@ class GalleryActivity : AppCompatActivity() {
                 seekBar.visibility = View.GONE
             }
             if (filter is GPUImage3DLutTableFilter) {
-                lutTableImage.setImageBitmap(filter.bitmap)
+                val bitmap = Bitmap.createBitmap(filter.texture,
+                        512,
+                        512,
+                        Bitmap.Config.ARGB_8888)
+                lutTableImage.setImageBitmap(bitmap)
             }
         }
     }

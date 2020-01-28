@@ -1,6 +1,6 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 
 /**
  * Performs a film Grain noise effect
@@ -168,10 +168,10 @@ public class GPUImageGrainNoiseFilter extends GPUImageFilter {
     @Override
     public void onInit() {
         super.onInit();
-        timeLocation = GLES20.glGetUniformLocation(getProgram(), "timer");
-        scaleLocation = GLES20.glGetUniformLocation(getProgram(), "scale");
-        grainAmmountLocation = GLES20.glGetUniformLocation(getProgram(), "grainAmount");
-        grainSizeLocation = GLES20.glGetUniformLocation(getProgram(), "grainSize");
+        timeLocation = GLES30.glGetUniformLocation(getProgram(), "timer");
+        scaleLocation = GLES30.glGetUniformLocation(getProgram(), "scale");
+        grainAmmountLocation = GLES30.glGetUniformLocation(getProgram(), "grainAmount");
+        grainSizeLocation = GLES30.glGetUniformLocation(getProgram(), "grainSize");
     }
 
     @Override
