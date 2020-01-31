@@ -17,7 +17,6 @@
 package jp.co.cyberagent.android.gpuimage.sample.activity
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -25,9 +24,11 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import jp.co.cyberagent.android.gpuimage.GPUImage
 import jp.co.cyberagent.android.gpuimage.GPUImageView
+import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
-import jp.co.cyberagent.android.gpuimage.filter.lookup3d.GPUImage3DLutTableFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -61,6 +62,8 @@ class GalleryActivity : AppCompatActivity() {
             }
         }
         findViewById<View>(R.id.button_save).setOnClickListener { saveImage() }
+
+        gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE)
 
         startPhotoPicker()
     }
@@ -101,12 +104,9 @@ class GalleryActivity : AppCompatActivity() {
             } else {
                 seekBar.visibility = View.GONE
             }
-            if (filter is GPUImage3DLutTableFilter) {
-                val bitmap = Bitmap.createBitmap(filter.texture,
-                        512,
-                        512,
-                        Bitmap.Config.ARGB_8888)
-                lutTableImage.setImageBitmap(bitmap)
+            when (filter) {
+                is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+                is GPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
             }
         }
     }

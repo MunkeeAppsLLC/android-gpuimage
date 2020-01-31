@@ -18,27 +18,50 @@ package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 
 import android.opengl.GLES30;
 
-import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter;
 
-public class GPUImage3DLutTableFilter extends GPUImage3DSamplerInputFilter {
+public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
 
     public static final String LOOKUP_FRAGMENT_SHADER =
-            "#extension GL_OES_texture_3D : enable\n" +
+            "varying highp vec2 textureCoordinate;\n" +
+                    "varying highp vec2 textureCoordinate2; // TODO: This is not used\n" +
                     "\n" +
-                    "precision highp float;\n" +
-                    "\n" +
-                    "varying highp vec2 textureCoordinate;\n" +
-                    "varying highp vec3 textureCoordinate2;\n" +
                     "uniform sampler2D inputImageTexture;\n" +
+                    "uniform sampler2D inputImageTexture2;// lookup texture\n" +
                     "\n" +
                     "uniform lowp float intensity;\n" +
+                    "uniform lowp float dimension;\n" +
                     "\n" +
-                    "uniform sampler3D inputImageTexture2;\n" +
-                    "void main() {\n" +
-                    "    vec2 texcoord0 = textureCoordinate.xy;\n" +
-                    "    vec4 rawColor = texture2D(inputImageTexture, texcoord0);\n" +
-                    "    vec4 outColor = texture3D(inputImageTexture2, rawColor.rgb);\n" +
-                    "    gl_FragColor = mix(rawColor, outColor, intensity);\n" +
+                    "vec4 sampleAs3DTexture(sampler2D tex, vec3 texCoord, float size) {\n" +
+                    "    highp float x = texCoord.z;\n" +
+                    "    highp float y = texCoord.y;\n" +
+                    "    highp float z = texCoord.x;\n" +
+                    "    highp float sliceSize = 1.0 / size;                  // space of 1 slice\n" +
+                    "    highp float slicePixelSize = sliceSize / size;       // space of 1 pixel\n" +
+                    "    highp float width = size - 1.0;\n" +
+                    "    highp float sliceInnerSize = slicePixelSize * width; // space of size pixels\n" +
+                    "    highp float zSlice0 = floor(y * width);\n" +
+                    "    highp float zSlice1 = min( zSlice0 + 1.0, width);\n" +
+                    "    highp float xOffset = slicePixelSize * 0.5 + z * sliceInnerSize;\n" +
+                    "    highp float yRange = (x * width + 0.5) / size;\n" +
+                    "    highp float s0 = xOffset + (zSlice0 * sliceSize);\n" +
+                    "    #if defined(USE_NEAREST)\n" +
+                    "        return texture2D(tex, vec2( s0, yRange)).bgra;\n" +
+                    "    #else\n" +
+                    "        highp float s1 = xOffset + (zSlice1 * sliceSize);\n" +
+                    "        highp vec4 slice0Color = texture2D(tex, vec2(s0, yRange));\n" +
+                    "        highp vec4 slice1Color = texture2D(tex, vec2(s1, yRange));\n" +
+                    "        highp float zOffset = mod(y * width, 1.0);\n" +
+                    "        return mix(slice0Color, slice1Color, zOffset).bgra;\n" +
+                    "    #endif\n" +
+                    "}\n" +
+                    "\n" +
+                    "\n" +
+                    "void main()\n" +
+                    "{\n" +
+                    "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
+                    "    highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);\n" +
+                    "    gl_FragColor = mix(textureColor, newColor, intensity);\n" +
                     "}";
 
     private int intensityLocation;

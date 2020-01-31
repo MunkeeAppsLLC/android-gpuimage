@@ -28,7 +28,8 @@ import jp.co.cyberagent.android.gpuimage.util.Rotation;
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 public class GPUImageTwoInputFilter extends GPUImageFilter {
-    private static final String VERTEX_SHADER = "attribute vec4 position;\n" +
+    private static final String VERTEX_SHADER =
+            "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
             "attribute vec4 inputTextureCoordinate2;\n" +
             " \n" +
@@ -108,6 +109,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
 
     public void onDestroy() {
         super.onDestroy();
+        recycleBitmap();
         GLES30.glDeleteTextures(1, new int[]{
                 filterSourceTexture2
         }, 0);

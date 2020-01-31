@@ -10,8 +10,7 @@ uniform lowp float intensity;
 
 uniform sampler3D inputImageTexture2;
 void main() {
-    vec2 texcoord0 = textureCoordinate.xy;
-    vec4 rawColor = texture2D(inputImageTexture, texcoord0);
-    vec4 outColor = texture3D(inputImageTexture2, rawColor.rgb);
-    gl_FragColor = mix(rawColor, outColor, intensity);
+    vec4 textureColor= texture2D(inputImageTexture, textureCoordinate);
+    vec4 newColor = texture3D(inputImageTexture2, textureColor.rgb);
+    gl_FragColor = mix(textureColor, newColor, intensity);
 }

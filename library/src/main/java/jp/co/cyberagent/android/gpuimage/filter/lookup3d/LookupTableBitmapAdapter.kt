@@ -19,7 +19,7 @@ class LookupTableBitmapAdapter {
     private var readBufferLength = 0
 
     fun toBitmap(inputStream: InputStream?, dimension: Int)
-            = toBitmap(inputStream, dimension, dimension*dimension, dimension)
+            = toBitmap(inputStream, dimension * dimension, dimension, dimension)
 
     fun toBitmap(inputStream: InputStream?, width: Int, height: Int,
                  dimension: Int): Bitmap? = inputStream?.let {
@@ -70,9 +70,9 @@ class LookupTableBitmapAdapter {
 
     private fun bgr(blue: Float, green: Float, red: Float ): Int {
         return -0x1000000 or
-                (((0xff * blue).toInt() and 0xFF) shl 16) or
+                ((0xff * red).toInt() and 0xFF) or
                 (((0xff * green).toInt() and 0xFF) shl 8) or
-                ((0xff * red).toInt() and 0xFF)
+                (((0xff * blue).toInt() and 0xFF) shl 16)
     }
 
     private fun readFloat(inputStream: InputStream, computeValue: Boolean): Float {

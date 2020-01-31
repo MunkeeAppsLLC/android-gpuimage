@@ -16,6 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES30;
 import android.util.Log;
 
@@ -43,8 +44,7 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
     private int filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
-    private int[] texture;
-    private int dimension;
+    private Bitmap bitmap;
 
     public GPUImage3DSamplerInputFilter(String fragmentShader) {
         this(VERTEX_SHADER, fragmentShader);
@@ -66,51 +66,52 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     @Override
     public void onInitialized() {
         super.onInitialized();
-        if (texture != null) {
-            setTexture(texture, dimension);
+        if (bitmap != null && !bitmap.isRecycled()) {
+            setBitmap(bitmap);
         }
     }
 
-    public void setTexture(final int[] texture, final int dimension) {
-        this.texture = texture;
-        this.dimension = dimension;
-        if (this.texture == null || texture.length == 0 || dimension <= 0
-                || dimension * dimension * dimension != texture.length) {
+    public void setBitmap(final Bitmap bitmap) {
+        this.bitmap = bitmap;
+        if (this.bitmap == null) {
             return;
         }
+        final int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        final int finalDimension = getDimension();
         runOnDraw(new Runnable() {
             public void run() {
                 if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
-                    if (texture == null || texture.length == 0 || dimension <= 0
-                            || dimension * dimension * dimension != texture.length) {
+                    if (bitmap == null || bitmap.isRecycled()) {
                         return;
                     }
                     GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
                     Log.e("OpenGLUtils", "0 "+GLES30.glGetError());
-                    IntBuffer texBuffer = (IntBuffer) ByteBuffer.allocateDirect(texture.length * Integer.SIZE)
+                    bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                    IntBuffer texBuffer = (IntBuffer) ByteBuffer.allocateDirect(pixels.length * Integer.SIZE)
                             .order(ByteOrder.nativeOrder())
                             .asIntBuffer()
-                            .put(texture)
+                            .put(pixels)
                             .position(0);
-                    filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, dimension, dimension, dimension,
-                            OpenGlUtils.NO_TEXTURE);
+                    filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, finalDimension, finalDimension, finalDimension, OpenGlUtils.NO_TEXTURE);
                 }
             }
         });
     }
 
-    public int[] getTexture() {
-        return texture;
+    public Bitmap getBitmap() {
+        return bitmap;
     }
 
-    public void clearTexture() {
-        this.texture = null;
-        this.dimension = 0;
+    public void recycleBitmap() {
+        if (bitmap != null && !bitmap.isRecycled()) {
+            bitmap.recycle();
+            bitmap = null;
+        }
     }
 
     public void onDestroy() {
         super.onDestroy();
-        clearTexture();
+        recycleBitmap();
         GLES30.glDeleteTextures(1, new int[]{
                 filterSourceTexture2
         }, 0);
@@ -126,6 +127,19 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     }
 
     public int getDimension() {
+        int dimension = 0;
+        if (bitmap == null || bitmap.isRecycled()) {
+            return 0;
+        }
+        if (bitmap.getWidth() > bitmap.getHeight()) {
+            dimension = bitmap.getHeight();
+        }
+        if (bitmap.getWidth() < bitmap.getHeight()) {
+            dimension = bitmap.getWidth();
+        }
+        if (bitmap.getWidth() == bitmap.getHeight()) {
+            dimension = ((int) Math.cbrt(bitmap.getWidth() * bitmap.getHeight()));
+        }
         return dimension;
     }
 }

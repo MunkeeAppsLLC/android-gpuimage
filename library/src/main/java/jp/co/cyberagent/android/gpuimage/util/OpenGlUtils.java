@@ -91,7 +91,7 @@ public class OpenGlUtils {
             Log.e("OpenGLUtils", "4 "+GLES30.glGetError());
             GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, usedTexId);
         } else {
-            GLES30.glTexImage3D(GLES30.GL_TEXTURE_3D, 0, GLES30.GL_RGBA, width, height, depth, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, data);
+            GLES30.glTexSubImage3D(GLES30.GL_TEXTURE_3D, 0, 0, 0, 0,  width, height, depth, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, data);
             GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, usedTexId);
             textures[0] = usedTexId;
         }
