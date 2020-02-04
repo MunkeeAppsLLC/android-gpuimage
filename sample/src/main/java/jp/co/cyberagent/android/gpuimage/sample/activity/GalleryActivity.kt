@@ -105,7 +105,7 @@ class GalleryActivity : AppCompatActivity() {
                 seekBar.visibility = View.GONE
             }
             when (filter) {
-                is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+                is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
                 is GPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
             }
         }

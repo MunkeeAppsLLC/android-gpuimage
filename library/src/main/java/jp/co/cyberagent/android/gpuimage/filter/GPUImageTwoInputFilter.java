@@ -76,13 +76,10 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     }
 
     public void setBitmap(final Bitmap bitmap) {
-        if (bitmap != null && bitmap.isRecycled()) {
+        if (this.bitmap != null || bitmap == null || bitmap.isRecycled()) {
             return;
         }
         this.bitmap = bitmap;
-        if (this.bitmap == null) {
-            return;
-        }
         runOnDraw(new Runnable() {
             public void run() {
                 if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
