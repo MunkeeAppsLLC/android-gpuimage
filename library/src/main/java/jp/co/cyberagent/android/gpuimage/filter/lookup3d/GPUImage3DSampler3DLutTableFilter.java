@@ -30,14 +30,19 @@ public class GPUImage3DSampler3DLutTableFilter extends GPUImage3DSamplerInputFil
                     "varying highp vec2 textureCoordinate;\n" +
                     "varying highp vec3 textureCoordinate2;\n" +
                     "uniform sampler2D inputImageTexture;\n" +
-                    "\n" +
+                    "uniform int isInputImageTexture2Loaded;\n" +
                     "uniform lowp float intensity;\n" +
                     "\n" +
                     "uniform sampler3D inputImageTexture2;\n" +
                     "void main() {\n" +
                     "    vec4 textureColor= texture2D(inputImageTexture, textureCoordinate);\n" +
-                    "    vec4 newColor = texture3D(inputImageTexture2, textureColor.rgb);\n" +
-                    "    gl_FragColor = mix(textureColor, newColor, intensity);\n" +
+                    "    if(isInputImageTexture2Loaded == 0) {\n" +
+                    "        gl_FragColor = textureColor;    \n" +
+                    "    } else {\n" +
+                    "        vec4 newColor = texture3D(inputImageTexture2, textureColor.rgb);\n" +
+                    "        gl_FragColor = mix(textureColor, newColor, intensity);\n" +
+                    "    }\n" +
+                    "    \n" +
                     "}";
 
     private int intensityLocation;

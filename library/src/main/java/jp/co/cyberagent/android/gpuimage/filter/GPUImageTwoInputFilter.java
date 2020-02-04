@@ -46,6 +46,8 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
     private int filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+    private int isInputImageTexture2LoadedLocation;
+    private boolean isInputImageTexture2Loaded = false;
     private ByteBuffer texture2CoordinatesBuffer;
     private Bitmap bitmap;
 
@@ -64,6 +66,8 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
 
         filterSecondTextureCoordinateAttribute = GLES30.glGetAttribLocation(getProgram(), "inputTextureCoordinate2");
         filterInputTextureUniform2 = GLES30.glGetUniformLocation(getProgram(), "inputImageTexture2"); // This does assume a name of "inputImageTexture2" for second input texture in the fragment shader
+        isInputImageTexture2LoadedLocation = GLES30.glGetUniformLocation(getProgram(), "isInputImageTexture2Loaded"); // This does assume a name of "inputImageTexture2" for second input texture in the fragment shader
+
         GLES30.glEnableVertexAttribArray(filterSecondTextureCoordinateAttribute);
     }
 
@@ -88,6 +92,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
                     }
                     GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
                     filterSourceTexture2 = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, false);
+                    setInputImageTexture2Loaded(true);
                 }
             }
         });
@@ -97,10 +102,16 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
         return bitmap;
     }
 
+    private void setInputImageTexture2Loaded(boolean inputImageTexture2Loaded) {
+        isInputImageTexture2Loaded = inputImageTexture2Loaded;
+        setInteger(isInputImageTexture2LoadedLocation, isInputImageTexture2Loaded ? 1 : 0);
+    }
+
     public void recycleBitmap() {
         if (bitmap != null && !bitmap.isRecycled()) {
             bitmap.recycle();
             bitmap = null;
+            setInputImageTexture2Loaded(false);
         }
     }
 

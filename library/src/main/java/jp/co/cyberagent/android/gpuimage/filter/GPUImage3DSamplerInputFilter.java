@@ -44,6 +44,9 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
     private int filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+    private int isInputImageTexture2LoadedLocation;
+    private boolean isInputImageTexture2Loaded = false;
+
     private Bitmap texture;
     private int textureWidth;
     private int textureHeight;
@@ -63,6 +66,8 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
 
         filterSecondTextureCoordinateAttribute = GLES30.glGetAttribLocation(getProgram(), "inputTextureCoordinate2");
         filterInputTextureUniform2 = GLES30.glGetUniformLocation(getProgram(), "inputImageTexture2"); // This does assume a name of "inputImageTexture2" for second input texture in the fragment shader
+        isInputImageTexture2LoadedLocation = GLES30.glGetUniformLocation(getProgram(), "isInputImageTexture2Loaded"); // This does assume a name of "inputImageTexture2" for second input texture in the fragment shader
+
         GLES30.glEnableVertexAttribArray(filterSecondTextureCoordinateAttribute);
     }
 
@@ -108,6 +113,7 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
                             .put(pixels)
                             .position(0);
                     filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, textureWidth, textureHeight, textureDepth, OpenGlUtils.NO_TEXTURE);
+                    setInputImageTexture2Loaded(true);
                 }
             }
         });
@@ -129,10 +135,16 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
         return textureDepth;
     }
 
+    private void setInputImageTexture2Loaded(boolean inputImageTexture2Loaded) {
+        isInputImageTexture2Loaded = inputImageTexture2Loaded;
+        setInteger(isInputImageTexture2LoadedLocation, isInputImageTexture2Loaded ? 1 : 0);
+    }
+
     public void recycleBitmap() {
         if (texture != null && !texture.isRecycled()) {
             texture.recycle();
             texture = null;
+            setInputImageTexture2Loaded(false);
         }
     }
 

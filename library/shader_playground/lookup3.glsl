@@ -3,6 +3,7 @@ varying highp vec2 textureCoordinate2; // TODO: This is not used
 
 uniform sampler2D inputImageTexture;
 uniform sampler2D inputImageTexture2;// lookup texture
+uniform int isInputImageTexture2Loaded;
 
 uniform lowp float intensity;
 uniform lowp float dimension;
@@ -24,12 +25,12 @@ vec4 sampleAs3DTexture(sampler2D tex, vec3 texCoord, float size, float isSquareT
 
     highp float xOffset = sliceTexelSize * 0.5 + x * sliceInnerSize;
 
-    highp float z0 = zSlice0 * sliceSize + xOffset;
     highp float z1 = zSlice1 * sliceSize + xOffset;
 
     #if defined(USE_NEAREST)
         return texture2D(tex, vec2( z0, yRange)).bgra;
     #else
+        highp float z0 = zSlice0 * sliceSize + xOffset;
         highp vec4 slice0Color = texture2D(tex, vec2(z0, yRange));
         highp vec4 slice1Color = texture2D(tex, vec2(z1, yRange));
         highp float zOffset = mod(z * texelsPerSlice, 1.0);
@@ -41,6 +42,10 @@ vec4 sampleAs3DTexture(sampler2D tex, vec3 texCoord, float size, float isSquareT
 void main()
 {
     highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);
-    highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension, 1.0);
-    gl_FragColor = mix(textureColor, newColor, intensity);
+    if (isInputImageTexture2Loaded == 0) {
+        gl_FragColor = textureColor;
+    } else {
+        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension, 1.0);
+        gl_FragColor = mix(textureColor, newColor, intensity);
+    }
 }

@@ -29,6 +29,7 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "\n" +
                     "uniform sampler2D inputImageTexture;\n" +
                     "uniform sampler2D inputImageTexture2;// lookup texture\n" +
+                    "uniform int isInputImageTexture2Loaded;\n" +
                     "\n" +
                     "uniform lowp float intensity;\n" +
                     "uniform lowp float dimension;\n" +
@@ -50,12 +51,12 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "\n" +
                     "    highp float xOffset = sliceTexelSize * 0.5 + x * sliceInnerSize;\n" +
                     "\n" +
-                    "    highp float z0 = zSlice0 * sliceSize + xOffset;\n" +
                     "    highp float z1 = zSlice1 * sliceSize + xOffset;\n" +
                     "\n" +
                     "    #if defined(USE_NEAREST)\n" +
                     "        return texture2D(tex, vec2( z0, yRange)).bgra;\n" +
                     "    #else\n" +
+                    "        highp float z0 = zSlice0 * sliceSize + xOffset;\n" +
                     "        highp vec4 slice0Color = texture2D(tex, vec2(z0, yRange));\n" +
                     "        highp vec4 slice1Color = texture2D(tex, vec2(z1, yRange));\n" +
                     "        highp float zOffset = mod(z * texelsPerSlice, 1.0);\n" +
@@ -67,17 +68,19 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "void main()\n" +
                     "{\n" +
                     "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
-                    "    highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension, 1.0);\n" +
-                    "    gl_FragColor = mix(textureColor, newColor, intensity);\n" +
+                    "    if (isInputImageTexture2Loaded == 0) {\n" +
+                    "        gl_FragColor = textureColor;\n" +
+                    "    } else {\n" +
+                    "        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension, 1.0);\n" +
+                    "        gl_FragColor = mix(textureColor, newColor, intensity);\n" +
+                    "    }\n" +
                     "}";
 
     private int intensityLocation;
     private int dimensionLocation;
-    private int isSquareTextureLocation;
 
     private float intensity;
     private float dimension = 0;
-    private int isSquareTexture = 0;
 
     public GPUImage3DLutTableFilter() {
         this(1.0f);
@@ -115,7 +118,6 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
             this.dimension = Math.min(getBitmap().getWidth(), getBitmap().getHeight());
             if (getBitmap().getWidth() == getBitmap().getHeight()) {
                 this.dimension = ((int) Math.cbrt(getBitmap().getWidth() * getBitmap().getHeight()));
-                this.isSquareTexture = 1;
             }
         }
     }
