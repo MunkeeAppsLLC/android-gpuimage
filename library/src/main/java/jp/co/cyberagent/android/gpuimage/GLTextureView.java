@@ -42,13 +42,14 @@ public class GLTextureView extends TextureView
 
     private final static String TAG = GLTextureView.class.getSimpleName();
 
-    private final static boolean LOG_ATTACH_DETACH = false;
-    private final static boolean LOG_THREADS = false;
-    private final static boolean LOG_PAUSE_RESUME = false;
-    private final static boolean LOG_SURFACE = false;
-    private final static boolean LOG_RENDERER = false;
-    private final static boolean LOG_RENDERER_DRAW_FRAME = false;
-    private final static boolean LOG_EGL = false;
+    private static final boolean LOG_ALL = false;
+    private static final boolean LOG_ATTACH_DETACH = LOG_ALL || false;
+    private static final boolean LOG_THREADS = LOG_ALL || false;
+    private static final boolean LOG_PAUSE_RESUME = LOG_ALL || false;
+    private static final boolean LOG_SURFACE = LOG_ALL || false;
+    private static final boolean LOG_RENDERER = LOG_ALL || false;
+    private static final boolean LOG_RENDERER_DRAW_FRAME = LOG_ALL || false;
+    private static final boolean LOG_EGL = LOG_ALL || false;
 
     /**
      * The renderer only renders
@@ -229,7 +230,7 @@ public class GLTextureView extends TextureView
             eglWindowSurfaceFactory = new DefaultWindowSurfaceFactory();
         }
         this.renderer = renderer;
-        glThread = new GLThread(mThisWeakRef);
+        glThread = new GLThread(mThisWeakRef, glThreadManager);
         glThread.start();
     }
 
@@ -455,15 +456,7 @@ public class GLTextureView extends TextureView
             Log.d(TAG, "onAttachedToWindow reattach =" + detached);
         }
         if (detached && (renderer != null)) {
-            int renderMode = RENDERMODE_CONTINUOUSLY;
-            if (glThread != null) {
-                renderMode = glThread.getRenderMode();
-            }
-            glThread = new GLThread(mThisWeakRef);
-            if (renderMode != RENDERMODE_CONTINUOUSLY) {
-                glThread.setRenderMode(renderMode);
-            }
-            glThread.start();
+            onResume();
         }
         detached = false;
     }
@@ -479,7 +472,7 @@ public class GLTextureView extends TextureView
             Log.d(TAG, "onDetachedFromWindow");
         }
         if (glThread != null) {
-            glThread.requestExitAndWait();
+            onPause();
         }
         detached = true;
         super.onDetachedFromWindow();
@@ -668,6 +661,10 @@ public class GLTextureView extends TextureView
          *           test if the interface supports GL11 or higher interfaces.
          */
         void onDrawFrame(GL10 gl);
+
+        void onSurfaceDestroyed();
+
+        void onEglContextDestroyed();
     }
 
     /**
@@ -1122,8 +1119,11 @@ public class GLTextureView extends TextureView
      * glThreadManager object. This avoids multiple-lock ordering issues.
      */
     static class GLThread extends Thread {
-        GLThread(WeakReference<GLTextureView> glTextureViewWeakRef) {
+        private GLThreadManager glThreadManager;
+
+        GLThread(WeakReference<GLTextureView> glTextureViewWeakRef, GLThreadManager glThreadManager) {
             super();
+            this.glThreadManager = glThreadManager;
             width = 0;
             height = 0;
             requestRender = true;
@@ -1155,6 +1155,10 @@ public class GLTextureView extends TextureView
             if (haveEglSurface) {
                 haveEglSurface = false;
                 eglHelper.destroySurface();
+                GLTextureView view = glTextureViewWeakRef.get();
+                if(view != null) {
+                    view.renderer.onSurfaceDestroyed();
+                }
             }
         }
 
@@ -1166,6 +1170,10 @@ public class GLTextureView extends TextureView
             if (haveEglContext) {
                 eglHelper.finish();
                 haveEglContext = false;
+                GLTextureView view = glTextureViewWeakRef.get();
+                if(view != null) {
+                    view.renderer.onEglContextDestroyed();
+                }
                 glThreadManager.releaseEglContextLocked(this);
             }
         }
@@ -1241,7 +1249,7 @@ public class GLTextureView extends TextureView
                             if (pausing && haveEglContext) {
                                 GLTextureView view = glTextureViewWeakRef.get();
                                 boolean preserveEglContextOnPause =
-                                        view == null ? false : view.preserveEGLContextOnPause;
+                                        view != null && view.preserveEGLContextOnPause;
                                 if (!preserveEglContextOnPause
                                         || glThreadManager.shouldReleaseEGLContextWhenPausing()) {
                                     stopEglContextLocked();
@@ -1792,7 +1800,7 @@ public class GLTextureView extends TextureView
         private GLThread eglOwner;
     }
 
-    private static final GLThreadManager glThreadManager = new GLThreadManager();
+    private final GLThreadManager glThreadManager = new GLThreadManager();
 
     private final WeakReference<GLTextureView> mThisWeakRef = new WeakReference<>(this);
     private GLThread glThread;

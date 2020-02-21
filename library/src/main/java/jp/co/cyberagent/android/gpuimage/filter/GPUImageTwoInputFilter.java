@@ -107,17 +107,26 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
         setInteger(isInputImageTexture2LoadedLocation, isInputImageTexture2Loaded ? 1 : 0);
     }
 
-    public void recycleBitmap() {
-        if (bitmap != null && !bitmap.isRecycled()) {
-            bitmap.recycle();
+    public void reset() {
+        reset(false);
+    }
+    public void reset(boolean recycleBitmap) {
+        if (bitmap != null) {
+            if (recycleBitmap && !bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
             bitmap = null;
-            setInputImageTexture2Loaded(false);
         }
+        setInputImageTexture2Loaded(false);
+        GLES30.glDeleteTextures(1, new int[]{
+                filterSourceTexture2
+        }, 0);
+        filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
     }
 
     public void onDestroy() {
         super.onDestroy();
-        recycleBitmap();
+        reset();
         GLES30.glDeleteTextures(1, new int[]{
                 filterSourceTexture2
         }, 0);

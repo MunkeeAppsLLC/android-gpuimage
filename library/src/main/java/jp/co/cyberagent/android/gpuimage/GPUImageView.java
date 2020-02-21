@@ -31,6 +31,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -279,12 +280,27 @@ public class GPUImageView extends FrameLayout {
         gpuImage.setImage(file);
     }
 
+    public Bitmap getCurrentBitmap() {
+        return gpuImage.getCurrentBitmap();
+    }
+
     public void requestRender() {
         if (surfaceView instanceof GLSurfaceView) {
             ((GLSurfaceView) surfaceView).requestRender();
         } else if (surfaceView instanceof GLTextureView) {
             ((GLTextureView) surfaceView).requestRender();
         }
+    }
+
+    /**
+     * Returns a new scaled bitmap using the current set bitmap.
+     * If the bitmap is not set, the returned value is null
+     * @param newWidth width to be scaled to
+     * @param newHeight height to be scaled to
+     * @return the new scaled bitmap
+     */
+    public Bitmap buildThumbnail(int newWidth, int newHeight) {
+        return gpuImage.buildThumbnail(newWidth, newHeight);
     }
 
     /**
@@ -450,12 +466,36 @@ public class GPUImageView extends FrameLayout {
         }
     }
 
+//    @Override
+//    protected void onAttachedToWindow() {
+//        super.onAttachedToWindow();
+//        if (surfaceView instanceof GLTextureView) {
+//            ((GLTextureView) surfaceView).onAttachedToWindow();
+//        }
+//    }
+//
+//    @Override
+//    protected void onDetachedFromWindow() {
+//        super.onDetachedFromWindow();
+//        if (surfaceView instanceof GLTextureView) {
+//            ((GLTextureView) surfaceView).onDetachedFromWindow();
+//        }
+//    }
+
     public void enqueueOnImageLoaded(Runnable runnable) {
         gpuImage.enqueueOnImageLoaded(runnable);
     }
 
     public void clearOnImageLoadedQueue(Runnable runnable) {
         gpuImage.clearOnImageLoadedQueue(runnable);
+    }
+
+    public void setPreserveEglContextOnPause(boolean preserveEglContextOnPause) {
+        if (surfaceView instanceof GLTextureView) {
+            ((GLTextureView) surfaceView).setPreserveEGLContextOnPause(preserveEglContextOnPause);
+        } else {
+            Log.w("GPUImageView", "SurfaceView type is GLSurfaceView, can't setPreserveEglContextOnPause");
+        }
     }
 
     public static class Size {

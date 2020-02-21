@@ -316,11 +316,12 @@ object GPUImageFilterTools {
             FilterType.VIBRANCE -> GPUImageVibranceFilter()
             FilterType.PERLIN_NOISE -> GPUImagePerlinNoiseFilter()
             FilterType.GRAIN_NOISE -> GPUImageGrainNoiseFilter()
+
             FilterType.LOOKUP_SAMPLER_3D -> GPUImage3DSampler3DLutTableFilter().apply {
-//                texture = BitmapFactory.decodeResource(context.resources, R.drawable.tiny_lookup_8_by_64)
+                texture = BitmapFactory.decodeResource(context.resources, R.drawable.tiny_lookup_8_by_64)
             }
             FilterType.LOOKUP_SAMPLER_2D -> GPUImage3DLutTableFilter().apply {
-//                bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.tiny_lookup_8_by_64)
+                bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.tiny_lookup_8_by_64)
             }
             FilterType.LOOKUP_AMATORKA -> GPUImageLookupFilter().apply {
                 bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.lookup_amatorka)

@@ -133,6 +133,15 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         }
     }
 
+    @Override
+    public void onSurfaceDestroyed() {
+    }
+
+    @Override
+    public void onEglContextDestroyed() {
+        filter.destroy();
+    }
+
     /**
      * Sets the background color
      *
@@ -213,6 +222,10 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
                 GPUImageRenderer.this.filter.onOutputSizeChanged(outputWidth, outputHeight);
             }
         });
+    }
+
+    public GPUImageFilter getFilter() {
+        return filter;
     }
 
     public void deleteImage() {

@@ -82,6 +82,8 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
     private float intensity;
     private float dimension = 0;
 
+    private String bitmapId = "";
+
     public GPUImage3DLutTableFilter() {
         this(1.0f);
     }
@@ -111,6 +113,20 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
         setDimension(dimension);
     }
 
+    public String getBitmapId() {
+        return bitmapId;
+    }
+
+    public void setBitmapId(String bitmapId) {
+        this.bitmapId = bitmapId;
+    }
+
+    @Override
+    public void reset(boolean recycleBitmap) {
+        super.reset(recycleBitmap);
+        bitmapId = "";
+    }
+
     public void computeDimension() {
         if (getBitmap() == null || getBitmap().isRecycled()) {
             this.dimension = 0;
@@ -125,6 +141,10 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
     public void setIntensity(final float intensity) {
         this.intensity = intensity;
         setFloat(intensityLocation, this.intensity);
+    }
+
+    public float getIntensity() {
+        return intensity;
     }
 
     private void setDimension(float dimension) {

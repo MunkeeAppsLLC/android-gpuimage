@@ -38,6 +38,9 @@ import android.provider.MediaStore;
 import android.view.Display;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -254,6 +257,25 @@ public class GPUImage {
     }
 
     /**
+     * Returns a new scaled bitmap using the current set bitmap.
+     * If the bitmap is not set, the returned value is null
+     * @param newWidth width to be scaled to
+     * @param newHeight height to be scaled to
+     * @return the new scaled bitmap
+     */
+    public Bitmap buildThumbnail(int newWidth, int newHeight) {
+        if (currentBitmap != null && !currentBitmap.isRecycled()) {
+            return Bitmap.createScaledBitmap(currentBitmap, newWidth, newHeight, true);
+        } else {
+            return null;
+        }
+    }
+
+    public Bitmap getCurrentBitmap() {
+        return currentBitmap;
+    }
+
+    /**
      * Update camera preview frame with YUV format data.
      *
      * @param data   Camera preview YUV data for frame.
@@ -455,6 +477,18 @@ public class GPUImage {
         }
         renderer.deleteImage();
         buffer.destroy();
+    }
+
+    public static @Nullable  Bitmap getBitmapForFilter(@NonNull final Bitmap bitmap, @NonNull GPUImageFilter filter) {
+        Bitmap result = null;
+        GPUImageRenderer renderer = new GPUImageRenderer(filter);
+        renderer.setImageBitmap(bitmap, false);
+        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
+        buffer.setRenderer(renderer);
+        result = buffer.getBitmap();
+        renderer.deleteImage();
+        buffer.destroy();
+        return result;
     }
 
     /**

@@ -17,8 +17,10 @@
 package jp.co.cyberagent.android.gpuimage.sample.activity
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -38,8 +40,10 @@ class GalleryActivity : AppCompatActivity() {
 
     private var filterAdjuster: FilterAdjuster? = null
     private val gpuImageView: GPUImageView by lazy { findViewById<GPUImageView>(R.id.gpuimage) }
+    private val gpuImageContainerView: FrameLayout by lazy { findViewById<FrameLayout>(R.id.gpuimage_container) }
     private val seekBar: SeekBar by lazy { findViewById<SeekBar>(R.id.seekBar) }
     private val lutTableImage: ImageView by lazy { findViewById<ImageView>(R.id.lut_table) }
+    private lateinit var imageUri: Uri
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +75,7 @@ class GalleryActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_PICK_IMAGE -> if (resultCode == RESULT_OK) {
+                imageUri = data!!.data
                 gpuImageView.setImage(data!!.data)
                 gpuImageView.postInvalidate()
             } else {
@@ -95,20 +100,24 @@ class GalleryActivity : AppCompatActivity() {
     }
 
     private fun switchFilterTo(filter: GPUImageFilter) {
-        if (gpuImageView.filter == null || gpuImageView.filter.javaClass != filter.javaClass) {
-            gpuImageView.filter = filter
-            filterAdjuster = FilterAdjuster(filter)
-            if (filterAdjuster!!.canAdjust()) {
-                seekBar.visibility = View.VISIBLE
-                filterAdjuster!!.adjust(seekBar.progress)
-            } else {
-                seekBar.visibility = View.GONE
-            }
-            when (filter) {
-                is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
-                is GPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
-            }
+        gpuImageView.filter = filter
+        filterAdjuster = FilterAdjuster(filter)
+        if (filterAdjuster!!.canAdjust()) {
+            seekBar.visibility = View.VISIBLE
+            filterAdjuster!!.adjust(seekBar.progress)
+        } else {
+            seekBar.visibility = View.GONE
         }
+        when (filter) {
+            is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
+            is GPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+        }
+//        if(gpuImageView.parent == null) {
+//            gpuImageContainerView.addView(gpuImageView)
+//            gpuImageView.setImage(imageUri)
+//        } else {
+//            gpuImageContainerView.removeView(gpuImageView)
+//        }
     }
 
     companion object {
