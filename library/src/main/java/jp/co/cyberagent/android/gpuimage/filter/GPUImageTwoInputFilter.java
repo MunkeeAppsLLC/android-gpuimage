@@ -28,7 +28,8 @@ import jp.co.cyberagent.android.gpuimage.util.Rotation;
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 public class GPUImageTwoInputFilter extends GPUImageFilter {
-    private static final String VERTEX_SHADER = "attribute vec4 position;\n" +
+    private static final String VERTEX_SHADER =
+            "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
             "attribute vec4 inputTextureCoordinate2;\n" +
             " \n" +
@@ -45,6 +46,8 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
     private int filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+    private int isInputImageTexture2LoadedLocation;
+    private boolean isInputImageTexture2Loaded = false;
     private ByteBuffer texture2CoordinatesBuffer;
     private Bitmap bitmap;
 
@@ -63,6 +66,8 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
 
         filterSecondTextureCoordinateAttribute = GLES20.glGetAttribLocation(getProgram(), "inputTextureCoordinate2");
         filterInputTextureUniform2 = GLES20.glGetUniformLocation(getProgram(), "inputImageTexture2"); // This does assume a name of "inputImageTexture2" for second input texture in the fragment shader
+        isInputImageTexture2LoadedLocation = GLES20.glGetUniformLocation(getProgram(), "isInputImageTexture2Loaded"); // This does assume a name of "inputImageTexture2" for second input texture in the fragment shader
+
         GLES20.glEnableVertexAttribArray(filterSecondTextureCoordinateAttribute);
     }
 
@@ -75,13 +80,10 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     }
 
     public void setBitmap(final Bitmap bitmap) {
-        if (bitmap != null && bitmap.isRecycled()) {
+        if (this.bitmap != null || bitmap == null || bitmap.isRecycled()) {
             return;
         }
         this.bitmap = bitmap;
-        if (this.bitmap == null) {
-            return;
-        }
         runOnDraw(new Runnable() {
             public void run() {
                 if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
@@ -90,6 +92,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
                     }
                     GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
                     filterSourceTexture2 = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, false);
+                    setInputImageTexture2Loaded(true);
                 }
             }
         });
@@ -99,19 +102,32 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
         return bitmap;
     }
 
-    public void recycleBitmap() {
-        if (bitmap != null && !bitmap.isRecycled()) {
-            bitmap.recycle();
-            bitmap = null;
-        }
+    private void setInputImageTexture2Loaded(boolean inputImageTexture2Loaded) {
+        isInputImageTexture2Loaded = inputImageTexture2Loaded;
+        setInteger(isInputImageTexture2LoadedLocation, isInputImageTexture2Loaded ? 1 : 0);
     }
 
-    public void onDestroy() {
-        super.onDestroy();
+    public void reset() {
+        reset(false);
+    }
+
+    public void reset(boolean recycleBitmap) {
+        if (bitmap != null) {
+            if (recycleBitmap && !bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
+            bitmap = null;
+        }
+        setInputImageTexture2Loaded(false);
         GLES20.glDeleteTextures(1, new int[]{
                 filterSourceTexture2
         }, 0);
         filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        reset();
     }
 
     @Override

@@ -17,16 +17,20 @@
 package jp.co.cyberagent.android.gpuimage.sample.activity
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import jp.co.cyberagent.android.gpuimage.GPUImage
 import jp.co.cyberagent.android.gpuimage.GPUImageView
-import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DLutTableFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -36,8 +40,10 @@ class GalleryActivity : AppCompatActivity() {
 
     private var filterAdjuster: FilterAdjuster? = null
     private val gpuImageView: GPUImageView by lazy { findViewById<GPUImageView>(R.id.gpuimage) }
+    private val gpuImageContainerView: FrameLayout by lazy { findViewById<FrameLayout>(R.id.gpuimage_container) }
     private val seekBar: SeekBar by lazy { findViewById<SeekBar>(R.id.seekBar) }
     private val lutTableImage: ImageView by lazy { findViewById<ImageView>(R.id.lut_table) }
+    private lateinit var imageUri: Uri
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,13 +67,17 @@ class GalleryActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.button_save).setOnClickListener { saveImage() }
 
+        gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE)
+
         startPhotoPicker()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_PICK_IMAGE -> if (resultCode == RESULT_OK) {
+                imageUri = data!!.data
                 gpuImageView.setImage(data!!.data)
+                gpuImageView.postInvalidate()
             } else {
                 finish()
             }
@@ -85,24 +95,29 @@ class GalleryActivity : AppCompatActivity() {
     private fun saveImage() {
         val fileName = System.currentTimeMillis().toString() + ".jpg"
         gpuImageView.saveToPictures("GPUImage", fileName) { uri ->
-            Toast.makeText(this, "Saved: " + uri.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Saved: $uri", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun switchFilterTo(filter: GPUImageFilter) {
-        if (gpuImageView.filter == null || gpuImageView.filter.javaClass != filter.javaClass) {
-            gpuImageView.filter = filter
-            filterAdjuster = FilterAdjuster(filter)
-            if (filterAdjuster!!.canAdjust()) {
-                seekBar.visibility = View.VISIBLE
-                filterAdjuster!!.adjust(seekBar.progress)
-            } else {
-                seekBar.visibility = View.GONE
-            }
-            if (filter is GPUImage3DLutTableFilter) {
-                lutTableImage.setImageBitmap(filter.bitmap)
-            }
+        gpuImageView.filter = filter
+        filterAdjuster = FilterAdjuster(filter)
+        if (filterAdjuster!!.canAdjust()) {
+            seekBar.visibility = View.VISIBLE
+            filterAdjuster!!.adjust(seekBar.progress)
+        } else {
+            seekBar.visibility = View.GONE
         }
+        when (filter) {
+            is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
+            is GPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+        }
+//        if(gpuImageView.parent == null) {
+//            gpuImageContainerView.addView(gpuImageView)
+//            gpuImageView.setImage(imageUri)
+//        } else {
+//            gpuImageContainerView.removeView(gpuImageView)
+//        }
     }
 
     companion object {

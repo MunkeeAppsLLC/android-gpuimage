@@ -133,6 +133,15 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         }
     }
 
+    @Override
+    public void onSurfaceDestroyed() {
+    }
+
+    @Override
+    public void onEglContextDestroyed() {
+        filter.destroy();
+    }
+
     /**
      * Sets the background color
      *
@@ -215,6 +224,10 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         });
     }
 
+    public GPUImageFilter getFilter() {
+        return filter;
+    }
+
     public void deleteImage() {
         runOnDraw(new Runnable() {
 
@@ -253,10 +266,13 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
                     addedPadding = 0;
                 }
 
-                glTextureId = OpenGlUtils.loadTexture(
-                        resizedBitmap != null ? resizedBitmap : bitmap, glTextureId, recycle);
-                if (resizedBitmap != null) {
+                Bitmap finalBitmap = resizedBitmap != null ? resizedBitmap : bitmap;
+                glTextureId = OpenGlUtils.loadTexture(finalBitmap, glTextureId, recycle);
+                if (resizedBitmap != null && !resizedBitmap.isRecycled()) {
                     resizedBitmap.recycle();
+                }
+                if (recycle && !bitmap.isRecycled()) {
+                    bitmap.recycle();
                 }
                 imageWidth = bitmap.getWidth();
                 imageHeight = bitmap.getHeight();
@@ -400,7 +416,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     protected void enqueueOnSurfaceChanged(final Runnable runnable) {
         runOnSurfaceChanged.add(runnable);
         //run them already if onSurfaceChanged has already been called
-        if (outputWidth < 0 && outputHeight < 0) {
+        if (outputWidth > 0 && outputHeight > 0) {
             runAll(runOnSurfaceChanged);
         }
     }
