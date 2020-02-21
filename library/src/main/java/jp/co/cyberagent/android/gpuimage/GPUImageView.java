@@ -466,22 +466,6 @@ public class GPUImageView extends FrameLayout {
         }
     }
 
-//    @Override
-//    protected void onAttachedToWindow() {
-//        super.onAttachedToWindow();
-//        if (surfaceView instanceof GLTextureView) {
-//            ((GLTextureView) surfaceView).onAttachedToWindow();
-//        }
-//    }
-//
-//    @Override
-//    protected void onDetachedFromWindow() {
-//        super.onDetachedFromWindow();
-//        if (surfaceView instanceof GLTextureView) {
-//            ((GLTextureView) surfaceView).onDetachedFromWindow();
-//        }
-//    }
-
     public void enqueueOnImageLoaded(Runnable runnable) {
         gpuImage.enqueueOnImageLoaded(runnable);
     }

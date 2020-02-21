@@ -110,6 +110,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     public void reset() {
         reset(false);
     }
+
     public void reset(boolean recycleBitmap) {
         if (bitmap != null) {
             if (recycleBitmap && !bitmap.isRecycled()) {
@@ -127,10 +128,6 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     public void onDestroy() {
         super.onDestroy();
         reset();
-        GLES20.glDeleteTextures(1, new int[]{
-                filterSourceTexture2
-        }, 0);
-        filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
     }
 
     @Override
