@@ -113,6 +113,7 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
                             .put(pixels)
                             .position(0);
                     filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, textureWidth, textureHeight, textureDepth, OpenGlUtils.NO_TEXTURE);
+                    texBuffer.clear();
                     setInputImageTexture2Loaded(true);
                 }
             }

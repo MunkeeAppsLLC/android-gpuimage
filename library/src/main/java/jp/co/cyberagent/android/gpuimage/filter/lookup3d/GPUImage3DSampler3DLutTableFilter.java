@@ -16,7 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 
-import android.opengl.GLES30;
+import android.opengl.GLES20;
 
 import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter;
 
@@ -61,7 +61,7 @@ public class GPUImage3DSampler3DLutTableFilter extends GPUImage3DSamplerInputFil
     @Override
     public void onInit() {
         super.onInit();
-        intensityLocation = GLES30.glGetUniformLocation(getProgram(), "intensity");
+        intensityLocation = GLES20.glGetUniformLocation(getProgram(), "intensity");
     }
 
     @Override

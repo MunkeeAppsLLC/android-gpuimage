@@ -16,7 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
-import android.opengl.GLES30;
+import android.opengl.GLES20;
 
 /**
  * Adjusts the shadows and highlights of an image
@@ -76,8 +76,8 @@ public class GPUImageHighlightShadowFilter extends GPUImageFilter {
     @Override
     public void onInit() {
         super.onInit();
-        highlightsLocation = GLES30.glGetUniformLocation(getProgram(), "highlights");
-        shadowsLocation = GLES30.glGetUniformLocation(getProgram(), "shadows");
+        highlightsLocation = GLES20.glGetUniformLocation(getProgram(), "highlights");
+        shadowsLocation = GLES20.glGetUniformLocation(getProgram(), "shadows");
     }
 
     @Override

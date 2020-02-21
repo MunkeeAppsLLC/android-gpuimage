@@ -17,7 +17,7 @@
 package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 
 import android.graphics.Bitmap;
-import android.opengl.GLES30;
+import android.opengl.GLES20;
 
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter;
 
@@ -96,8 +96,8 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
     @Override
     public void onInit() {
         super.onInit();
-        intensityLocation = GLES30.glGetUniformLocation(getProgram(), "intensity");
-        dimensionLocation = GLES30.glGetUniformLocation(getProgram(), "dimension");
+        intensityLocation = GLES20.glGetUniformLocation(getProgram(), "intensity");
+        dimensionLocation = GLES20.glGetUniformLocation(getProgram(), "dimension");
     }
 
     @Override
