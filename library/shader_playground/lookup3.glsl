@@ -8,7 +8,7 @@ uniform int isInputImageTexture2Loaded;
 uniform lowp float intensity;
 uniform lowp float dimension;
 
-vec4 sampleAs3DTexture(sampler2D tex, vec3 texCoord, float size, float isSquareTexture) {
+highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size, highp float isSquareTexture) {
     highp float x = texCoord.x;
     highp float y = texCoord.z;
     highp float z = texCoord.y;

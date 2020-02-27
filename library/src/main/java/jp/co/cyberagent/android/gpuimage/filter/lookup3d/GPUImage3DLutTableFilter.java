@@ -34,7 +34,7 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "uniform lowp float intensity;\n" +
                     "uniform lowp float dimension;\n" +
                     "\n" +
-                    "vec4 sampleAs3DTexture(sampler2D tex, vec3 texCoord, float size, float isSquareTexture) {\n" +
+                    "highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size, highp float isSquareTexture) {\n" +
                     "    highp float x = texCoord.x;\n" +
                     "    highp float y = texCoord.z;\n" +
                     "    highp float z = texCoord.y;\n" +
