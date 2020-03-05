@@ -8,7 +8,7 @@ uniform int isInputImageTexture2Loaded;
 uniform lowp float intensity;
 uniform lowp float dimension;
 
-highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size, highp float isSquareTexture) {
+highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size) {
     highp float x = texCoord.x;
     highp float y = texCoord.z;
     highp float z = texCoord.y;
@@ -45,7 +45,7 @@ void main()
     if (isInputImageTexture2Loaded == 0) {
         gl_FragColor = textureColor;
     } else {
-        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension, 1.0);
-        gl_FragColor = mix(textureColor, newColor, intensity);
+        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);
+        gl_FragColor = vec4(mix(textureColor, newColor, intensity).rgb, textureColor.w);
     }
 }

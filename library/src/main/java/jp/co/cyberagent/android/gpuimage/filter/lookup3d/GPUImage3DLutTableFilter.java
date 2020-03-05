@@ -34,7 +34,7 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "uniform lowp float intensity;\n" +
                     "uniform lowp float dimension;\n" +
                     "\n" +
-                    "highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size, highp float isSquareTexture) {\n" +
+                    "highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size) {\n" +
                     "    highp float x = texCoord.x;\n" +
                     "    highp float y = texCoord.z;\n" +
                     "    highp float z = texCoord.y;\n" +
@@ -71,8 +71,8 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "    if (isInputImageTexture2Loaded == 0) {\n" +
                     "        gl_FragColor = textureColor;\n" +
                     "    } else {\n" +
-                    "        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension, 1.0);\n" +
-                    "        gl_FragColor = mix(textureColor, newColor, intensity);\n" +
+                    "        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);\n" +
+                    "        gl_FragColor = vec4(mix(textureColor, newColor, intensity).rgb, textureColor.w);\n" +
                     "    }\n" +
                     "}";
 

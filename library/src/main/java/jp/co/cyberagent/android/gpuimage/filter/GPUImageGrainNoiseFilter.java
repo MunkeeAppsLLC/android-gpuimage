@@ -8,21 +8,21 @@ import android.opengl.GLES20;
 public class GPUImageGrainNoiseFilter extends GPUImageFilter {
     public static final String GRAIN_NOISE_FRAGMENT_SHADER = "" +
             "/*\n" +
-            "Film Grain post-process shader v1.1\n" +
-            "Martins Upitis (martinsh) devlog-martinsh.blogspot.com\n" +
-            "2013\n" +
-            "\n" +
-            "--------------------------\n" +
-            "This work is licensed under a Creative Commons Attribution 3.0 Unported License.\n" +
-            "So you are free to share, modify and adapt it for your needs, and even use it for commercial use.\n" +
-            "I would also love to hear about a project you are using it.\n" +
-            "\n" +
-            "Have fun,\n" +
-            "Martins\n" +
-            "--------------------------\n" +
-            "\n" +
-            "Perlin noise shader by toneburst:\n" +
-            "http://machinesdontcare.wordpress.com/2009/06/25/3d-perlin-noise-sphere-vertex-shader-sourcecode/\n" +
+            "    Film Grain post-process shader v1.1\n" +
+            "    Martins Upitis (martinsh) devlog-martinsh.blogspot.com\n" +
+            "    2013\n" +
+            "    \n" +
+            "    --------------------------\n" +
+            "    This work is licensed under a Creative Commons Attribution 3.0 Unported License.\n" +
+            "    So you are free to share, modify and adapt it for your needs, and even use it for commercial use.\n" +
+            "    I would also love to hear about a project you are using it.\n" +
+            "    \n" +
+            "    Have fun,\n" +
+            "    Martins\n" +
+            "    --------------------------\n" +
+            "    \n" +
+            "    Perlin noise shader by toneburst:\n" +
+            "    http://machinesdontcare.wordpress.com/2009/06/25/3d-perlin-noise-sphere-vertex-shader-sourcecode/\n" +
             "*/\n" +
             "\n" +
             "precision highp float;\n" +
@@ -33,8 +33,8 @@ public class GPUImageGrainNoiseFilter extends GPUImageFilter {
             "uniform float grainSize; //grain particle size (1.5 - 2.5)\n" +
             "uniform float scale;\n" +
             "\n" +
-            "const float permTexUnit = 1.0/256.0;\t\t// Perm texture texel-size\n" +
-            "const float permTexUnitHalf = 0.5/256.0;\t// Half perm texture texel-size\n" +
+            "const float permTexUnit = 1.0/256.0;// Perm texture texel-size\n" +
+            "const float permTexUnitHalf = 0.5/256.0;// Half perm texture texel-size\n" +
             "\n" +
             "bool colored = false; //colored noise?\n" +
             "float coloramount = 0.0;\n" +
@@ -129,7 +129,8 @@ public class GPUImageGrainNoiseFilter extends GPUImageFilter {
             "        noise.b = mix(noise.r,pnoise3D(vec3(rotCoordsB*textureCoordinate*grainSize*scale,2.0)),coloramount);\n" +
             "    }\n" +
             "\n" +
-            "    highp vec3 col = texture2D(inputImageTexture, textureCoordinate).rgb;\n" +
+            "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate); \n" +
+            "    highp vec3 col = textureColor.rgb;\n" +
             "\n" +
             "    //noisiness response curve based on scene luminance\n" +
             "    highp vec3 lumcoeff = vec3(0.299,0.587,0.114);\n" +
@@ -141,7 +142,7 @@ public class GPUImageGrainNoiseFilter extends GPUImageFilter {
             "    noise = mix(noise,vec3(0.0),pow(lum,4.0));\n" +
             "    col = col+noise*grainAmount;\n" +
             "\n" +
-            "    gl_FragColor =  vec4(col,1.0);\n" +
+            "    gl_FragColor =  vec4(col,textureColor.w);\n" +
             "}";
 
     private float time;

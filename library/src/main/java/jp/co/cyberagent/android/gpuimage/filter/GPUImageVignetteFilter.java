@@ -26,28 +26,29 @@ import android.opengl.GLES20;
  */
 public class GPUImageVignetteFilter extends GPUImageFilter {
     public static final String VIGNETTING_FRAGMENT_SHADER = "" +
-            " uniform sampler2D inputImageTexture;\n" +
-            " varying highp vec2 textureCoordinate;\n" +
-            " \n" +
-            " uniform lowp vec2 vignetteCenter;\n" +
-            " uniform lowp vec3 vignetteColor;\n" +
-            " uniform highp float vignetteStart;\n" +
-            " uniform highp float vignetteEnd;\n" +
-            " \n" +
-            " void main()\n" +
-            " {\n" +
-            "     /*\n" +
-            "     lowp vec3 rgb = texture2D(inputImageTexture, textureCoordinate).rgb;\n" +
-            "     lowp float d = distance(textureCoordinate, vec2(0.5,0.5));\n" +
-            "     rgb *= (1.0 - smoothstep(vignetteStart, vignetteEnd, d));\n" +
-            "     gl_FragColor = vec4(vec3(rgb),1.0);\n" +
-            "      */\n" +
-            "     \n" +
-            "     lowp vec3 rgb = texture2D(inputImageTexture, textureCoordinate).rgb;\n" +
-            "     lowp float d = distance(textureCoordinate, vec2(vignetteCenter.x, vignetteCenter.y));\n" +
-            "     lowp float percent = smoothstep(vignetteStart, vignetteEnd, d);\n" +
-            "     gl_FragColor = vec4(mix(rgb.x, vignetteColor.x, percent), mix(rgb.y, vignetteColor.y, percent), mix(rgb.z, vignetteColor.z, percent), 1.0);\n" +
-            " }";
+            "uniform sampler2D inputImageTexture;\n" +
+            "varying highp vec2 textureCoordinate;\n" +
+            "\n" +
+            "uniform lowp vec2 vignetteCenter;\n" +
+            "uniform lowp vec3 vignetteColor;\n" +
+            "uniform highp float vignetteStart;\n" +
+            "uniform highp float vignetteEnd;\n" +
+            "\n" +
+            "void main()\n" +
+            "{\n" +
+            "    /*\n" +
+            "   lowp vec3 rgb = texture2D(inputImageTexture, textureCoordinate).rgb;\n" +
+            "   lowp float d = distance(textureCoordinate, vec2(0.5,0.5));\n" +
+            "   rgb *= (1.0 - smoothstep(vignetteStart, vignetteEnd, d));\n" +
+            "   gl_FragColor = vec4(vec3(rgb),1.0);\n" +
+            "    */\n" +
+            "\n" +
+            "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
+            "    highp vec3 rgb = textureColor.rgb;\n" +
+            "    highp float d = distance(textureCoordinate, vec2(vignetteCenter.x, vignetteCenter.y));\n" +
+            "    highp float percent = smoothstep(vignetteStart, vignetteEnd, d);\n" +
+            "    gl_FragColor = vec4(mix(rgb.x, vignetteColor.x, percent), mix(rgb.y, vignetteColor.y, percent), mix(rgb.z, vignetteColor.z, percent), textureColor.w);\n" +
+            "}";
 
     private int vignetteCenterLocation;
     private PointF vignetteCenter;
