@@ -104,6 +104,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
             if (mergedFilters != null) {
                 mergedFilters.remove(filter);
             }
+            filter.destroy();
         }
     }
 
@@ -213,7 +214,6 @@ public class GPUImageFilterGroup extends GPUImageFilter {
                 if (isNotLast) {
                     GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffers[i]);
                     GLES20.glClearColor(0, 0, 0, 0);
-                    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
                 }
 
                 if (i == 0) {
