@@ -774,7 +774,7 @@ public class GPUImage {
             }
             options = new BitmapFactory.Options();
             options.inSampleSize = scale;
-            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
             options.inPurgeable = true;
             options.inTempStorage = new byte[32 * 1024];
             Bitmap bitmap = decode(options);
