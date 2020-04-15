@@ -68,7 +68,7 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "void main()\n" +
                     "{\n" +
                     "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
-                    "    if (isInputImageTexture2Loaded == 0) {\n" +
+                    "    if (isInputImageTexture2Loaded == 0 || textureColor.w == 0.0) {\n" +
                     "        gl_FragColor = textureColor;\n" +
                     "    } else {\n" +
                     "        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);\n" +
