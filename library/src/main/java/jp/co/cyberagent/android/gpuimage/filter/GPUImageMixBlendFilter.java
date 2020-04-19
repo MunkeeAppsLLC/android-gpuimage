@@ -18,7 +18,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
-public class GPUImageMixBlendFilter extends GPUImageTwoInputFilter {
+public class GPUImageMixBlendFilter extends BaseGPUImageTwoInputFilter {
 
     private int mixLocation;
     private float mix;

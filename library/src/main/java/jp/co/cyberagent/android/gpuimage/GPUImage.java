@@ -52,6 +52,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
 import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
 /**
@@ -96,7 +97,7 @@ public class GPUImage {
         }
 
         this.context = context;
-        filter = new GPUImageFilter();
+        filter = new GPUImageIdentityFilter();
         renderer = new GPUImageRenderer(filter);
         this.initDisplaySize(context);
     }
@@ -489,6 +490,14 @@ public class GPUImage {
         renderer.deleteImage();
         buffer.destroy();
         return result;
+    }
+
+    public Bitmap capture() {
+        return renderer.capture();
+    }
+
+    public GLSurfaceView.Renderer getRenderer() {
+        return renderer;
     }
 
     /**

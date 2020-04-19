@@ -5,7 +5,7 @@ import android.opengl.GLES20;
 /**
  * Performs a film Grain noise effect
  */
-public class GPUImageGrainNoiseFilter extends GPUImageFilter {
+public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
     public static final String GRAIN_NOISE_FRAGMENT_SHADER = "" +
             "/*\n" +
             "    Film Grain post-process shader v1.1\n" +

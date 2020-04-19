@@ -21,7 +21,7 @@ import android.opengl.GLES20;
 /**
  * Applies a grayscale effect to the image.
  */
-public class GPUImagePixelationFilter extends GPUImageFilter {
+public class GPUImagePixelationFilter extends BaseGPUImageFilter {
     public static final String PIXELATION_FRAGMENT_SHADER = "" +
             "precision highp float;\n" +
 

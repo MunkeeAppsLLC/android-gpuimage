@@ -18,7 +18,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
-public class GPUImageLookupFilter2 extends GPUImageTwoInputFilter {
+public class GPUImageLookupFilter2 extends BaseGPUImageTwoInputFilter {
 
     public static final String LOOKUP_FRAGMENT_SHADER = "varying highp vec2 textureCoordinate;\n" +
             "varying highp vec2 textureCoordinate;\n" +

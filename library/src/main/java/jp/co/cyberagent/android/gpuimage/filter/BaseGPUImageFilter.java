@@ -28,31 +28,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
-public class GPUImageFilter {
-    public static final String NO_FILTER_VERTEX_SHADER = "" +
-            "attribute vec4 position;\n" +
-            "attribute vec4 inputTextureCoordinate;\n" +
-            " \n" +
-            "varying vec2 textureCoordinate;\n" +
-            " \n" +
-            "void main()\n" +
-            "{\n" +
-            "    gl_Position = position;\n" +
-            "    textureCoordinate = inputTextureCoordinate.xy;\n" +
-            "}";
-    public static final String NO_FILTER_FRAGMENT_SHADER = "" +
-            "varying highp vec2 textureCoordinate;\n" +
-            " \n" +
-            "uniform sampler2D inputImageTexture;\n" +
-            " \n" +
-            "void main()\n" +
-            "{\n" +
-            "     gl_FragColor = texture2D(inputImageTexture, textureCoordinate);\n" +
-            "}";
+public abstract class BaseGPUImageFilter implements GPUImageFilter {
 
     private final Queue<Runnable> runOnDraw;
     private final String vertexShader;
     private final String fragmentShader;
+
     private int glProgId;
     private int glAttribPosition;
     private int glUniformTexture;
@@ -61,12 +42,12 @@ public class GPUImageFilter {
     private int outputHeight;
     private boolean isInitialized;
 
-    public GPUImageFilter() {
+    public BaseGPUImageFilter() {
         this(NO_FILTER_VERTEX_SHADER, NO_FILTER_FRAGMENT_SHADER);
     }
 
-    public GPUImageFilter(final String vertexShader, final String fragmentShader) {
-        runOnDraw = new ConcurrentLinkedQueue<>();
+    public BaseGPUImageFilter(final String vertexShader, final String fragmentShader) {
+        this.runOnDraw = new ConcurrentLinkedQueue<>();
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
     }
@@ -76,6 +57,7 @@ public class GPUImageFilter {
         onInitialized();
     }
 
+    @Override
     public void onInit() {
         glProgId = OpenGlUtils.loadProgram(vertexShader, fragmentShader);
         glAttribPosition = GLES20.glGetAttribLocation(glProgId, "position");
@@ -84,27 +66,33 @@ public class GPUImageFilter {
         isInitialized = true;
     }
 
+    @Override
     public void onInitialized() {
     }
 
-    public void ifNeedInit() {
+    @Override
+    public void initIfNeeded() {
         if (!isInitialized) init();
     }
 
+    @Override
     public final void destroy() {
         isInitialized = false;
         GLES20.glDeleteProgram(glProgId);
         onDestroy();
     }
 
+    @Override
     public void onDestroy() {
     }
 
+    @Override
     public void onOutputSizeChanged(final int width, final int height) {
         outputWidth = width;
         outputHeight = height;
     }
 
+    @Override
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
         GLES20.glUseProgram(glProgId);
@@ -132,108 +120,124 @@ public class GPUImageFilter {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
     }
 
-    protected void onDrawArraysPre() {
+    @Override
+    public void onDrawArraysPre() {
     }
 
-    protected void runPendingOnDrawTasks() {
+    @Override
+    public void runPendingOnDrawTasks() {
         while (!runOnDraw.isEmpty()) {
             runOnDraw.remove().run();
         }
     }
 
+    @Override
     public boolean isInitialized() {
         return isInitialized;
     }
 
+    @Override
     public int getOutputWidth() {
         return outputWidth;
     }
 
+    @Override
     public int getOutputHeight() {
         return outputHeight;
     }
 
+    @Override
     public int getProgram() {
         return glProgId;
     }
 
+    @Override
     public int getAttribPosition() {
         return glAttribPosition;
     }
 
+    @Override
     public int getAttribTextureCoordinate() {
         return glAttribTextureCoordinate;
     }
 
+    @Override
     public int getUniformTexture() {
         return glUniformTexture;
     }
 
-    protected void setInteger(final int location, final int intValue) {
+    @Override
+    public void setInteger(final int location, final int intValue) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniform1i(location, intValue);
             }
         });
     }
 
-    protected void setFloat(final int location, final float floatValue) {
+    @Override
+    public void setFloat(final int location, final float floatValue) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniform1f(location, floatValue);
             }
         });
     }
 
-    protected void setFloatVec2(final int location, final float[] arrayValue) {
+    @Override
+    public void setFloatVec2(final int location, final float[] arrayValue) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniform2fv(location, 1, FloatBuffer.wrap(arrayValue));
             }
         });
     }
 
-    protected void setFloatVec3(final int location, final float[] arrayValue) {
+    @Override
+    public void setFloatVec3(final int location, final float[] arrayValue) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniform3fv(location, 1, FloatBuffer.wrap(arrayValue));
             }
         });
     }
 
-    protected void setFloatVec4(final int location, final float[] arrayValue) {
+    @Override
+    public void setFloatVec4(final int location, final float[] arrayValue) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniform4fv(location, 1, FloatBuffer.wrap(arrayValue));
             }
         });
     }
 
-    protected void setFloatArray(final int location, final float[] arrayValue) {
+    @Override
+    public void setFloatArray(final int location, final float[] arrayValue) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniform1fv(location, arrayValue.length, FloatBuffer.wrap(arrayValue));
             }
         });
     }
 
-    protected void setPoint(final int location, final PointF point) {
+    @Override
+    public void setPoint(final int location, final PointF point) {
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 float[] vec2 = new float[2];
                 vec2[0] = point.x;
                 vec2[1] = point.y;
@@ -242,29 +246,32 @@ public class GPUImageFilter {
         });
     }
 
-    protected void setUniformMatrix3f(final int location, final float[] matrix) {
+    @Override
+    public void setUniformMatrix3f(final int location, final float[] matrix) {
         runOnDraw(new Runnable() {
 
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniformMatrix3fv(location, 1, false, matrix, 0);
             }
         });
     }
 
-    protected void setUniformMatrix4f(final int location, final float[] matrix) {
+    @Override
+    public void setUniformMatrix4f(final int location, final float[] matrix) {
         runOnDraw(new Runnable() {
 
             @Override
             public void run() {
-                ifNeedInit();
+                initIfNeeded();
                 GLES20.glUniformMatrix4fv(location, 1, false, matrix, 0);
             }
         });
     }
 
-    protected void runOnDraw(final Runnable runnable) {
+    @Override
+    public void runOnDraw(final Runnable runnable) {
         synchronized (runOnDraw) {
             runOnDraw.add(runnable);
         }
@@ -289,4 +296,5 @@ public class GPUImageFilter {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }
+
 }

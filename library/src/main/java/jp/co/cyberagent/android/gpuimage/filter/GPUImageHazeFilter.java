@@ -23,7 +23,7 @@ import android.opengl.GLES20;
  * <p>
  * This is similar to a UV filter.
  */
-public class GPUImageHazeFilter extends GPUImageFilter {
+public class GPUImageHazeFilter extends BaseGPUImageFilter {
     public static final String HAZE_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +
             "\n" +

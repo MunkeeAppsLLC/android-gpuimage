@@ -18,7 +18,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
-public class GPUImageLuminanceThresholdFilter extends GPUImageFilter {
+public class GPUImageLuminanceThresholdFilter extends BaseGPUImageFilter {
 
     public static final String LUMINANCE_THRESHOLD_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +

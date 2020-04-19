@@ -24,7 +24,7 @@ import android.opengl.GLES20;
  * x:
  * y: The directional intensity of the vignetting, with a default of x = 0.75, y = 0.5
  */
-public class GPUImageVignetteFilter extends GPUImageFilter {
+public class GPUImageVignetteFilter extends BaseGPUImageFilter {
     public static final String VIGNETTING_FRAGMENT_SHADER = "" +
             "uniform sampler2D inputImageTexture;\n" +
             "varying highp vec2 textureCoordinate;\n" +

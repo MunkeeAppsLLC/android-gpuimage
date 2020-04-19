@@ -36,7 +36,7 @@ import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE
  * Resembles a filter that consists of multiple filters applied after each
  * other.
  */
-public class GPUImageFilterGroup extends GPUImageFilter {
+public class GPUImageFilterGroup extends BaseGPUImageFilter {
 
     private List<GPUImageFilter> filters;
     private List<GPUImageFilter> mergedFilters;
@@ -116,7 +116,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
     public void onInit() {
         super.onInit();
         for (GPUImageFilter filter : filters) {
-            filter.ifNeedInit();
+            filter.initIfNeeded();
         }
     }
 

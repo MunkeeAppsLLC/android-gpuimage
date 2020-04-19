@@ -24,7 +24,7 @@ import android.opengl.GLES20;
  * image, but it is extremely computationally expensive, so it can take seconds to render a frame on an iPad 2.
  * This might be best used for still images.
  */
-public class GPUImageKuwaharaFilter extends GPUImageFilter {
+public class GPUImageKuwaharaFilter extends BaseGPUImageFilter {
     public static final String KUWAHARA_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +
             "uniform sampler2D inputImageTexture;\n" +

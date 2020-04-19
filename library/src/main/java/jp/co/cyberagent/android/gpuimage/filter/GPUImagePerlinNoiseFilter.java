@@ -5,7 +5,7 @@ import android.opengl.GLES20;
 /**
  * Performs a Perlin Noise effect
  */
-public class GPUImagePerlinNoiseFilter extends GPUImageFilter {
+public class GPUImagePerlinNoiseFilter extends BaseGPUImageFilter {
     public static final String PERLIN_NOISE_FRAGMENT_SHADER = "" +
             "precision highp float;\n" +
             " varying highp vec2 textureCoordinate;\n" +

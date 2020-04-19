@@ -19,9 +19,9 @@ package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter;
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageTwoInputFilter;
 
-public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
+public class GPUImage3DLutTableFilter extends BaseGPUImageTwoInputFilter {
 
     public static final String LOOKUP_FRAGMENT_SHADER =
             "varying highp vec2 textureCoordinate;\n" +
@@ -69,7 +69,7 @@ public class GPUImage3DLutTableFilter extends GPUImageTwoInputFilter {
                     "{\n" +
                     "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
                     "    if (isInputImageTexture2Loaded == 0 || textureColor.w == 0.0) {\n" +
-                    "        gl_FragColor = textureColor;\n" +
+                    "        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);\n" +
                     "    } else {\n" +
                     "        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);\n" +
                     "        gl_FragColor = vec4(mix(textureColor, newColor, intensity).rgb, textureColor.w);\n" +

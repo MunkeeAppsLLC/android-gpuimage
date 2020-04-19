@@ -4,7 +4,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
  * A filter that renders a FULLY transparent texture.
  * Used to have a transparent background when displaying a GPUImage before loading a texture
  */
-public class GPUImageTransparentFilter extends GPUImageFilter {
+public class GPUImageTransparentFilter extends BaseGPUImageFilter {
 
     public static final String TRANSPARENT_FILTER_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +

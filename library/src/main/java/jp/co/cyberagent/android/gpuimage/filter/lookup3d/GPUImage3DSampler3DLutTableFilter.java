@@ -18,9 +18,9 @@ package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 
 import android.opengl.GLES20;
 
-import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter;
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
 
-public class GPUImage3DSampler3DLutTableFilter extends GPUImage3DSamplerInputFilter {
+public class GPUImage3DSampler3DLutTableFilter extends BaseGPUImage3DSamplerInputFilter {
 
     public static final String LOOKUP_FRAGMENT_SHADER =
             "#extension GL_OES_texture_3D : enable\n" +

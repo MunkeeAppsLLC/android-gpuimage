@@ -23,7 +23,7 @@ import android.opengl.GLES20;
  * intensity: The degree to which the specific color replaces the normal image color (0.0 - 1.0, with 1.0 as the default)
  * color: The color to use as the basis for the effect, with (0.6, 0.45, 0.3, 1.0) as the default.
  */
-public class GPUImageMonochromeFilter extends GPUImageFilter {
+public class GPUImageMonochromeFilter extends BaseGPUImageFilter {
     public static final String MONOCHROME_FRAGMENT_SHADER = "" +
             " precision lowp float;\n" +
             "  \n" +

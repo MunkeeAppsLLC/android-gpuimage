@@ -24,7 +24,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import jp.co.cyberagent.android.gpuimage.GPUImageView
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -110,7 +110,7 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    private fun switchFilterTo(filter: GPUImageFilter) {
+    private fun switchFilterTo(filter: BaseGPUImageFilter) {
         if (gpuImageView.filter == null || gpuImageView.filter!!.javaClass != filter.javaClass) {
             gpuImageView.filter = filter
             filterAdjuster = FilterAdjuster(filter)

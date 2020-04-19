@@ -21,7 +21,7 @@ import android.opengl.GLES20;
 /**
  * Selectively replaces a color in the first image with the second image
  */
-public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter {
+public class GPUImageChromaKeyBlendFilter extends BaseGPUImageTwoInputFilter {
     public static final String CHROMA_KEY_BLEND_FRAGMENT_SHADER = " precision highp float;\n" +
             " \n" +
             " varying highp vec2 textureCoordinate;\n" +

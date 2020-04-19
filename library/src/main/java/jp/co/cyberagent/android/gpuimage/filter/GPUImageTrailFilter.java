@@ -26,7 +26,7 @@ public class GPUImageTrailFilter extends GPUImageFilterGroup {
 
     public GPUImageTrailFilter() {
         this.addFilter(transformFilter);
-        this.addFilter(new GPUImageFilter());
+        this.addFilter(new GPUImageIdentityFilter());
     }
 
     public void setTransform3D(float[] transform3D) {

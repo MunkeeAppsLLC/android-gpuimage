@@ -2,7 +2,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
-public class GPUImageVibranceFilter extends GPUImageFilter {
+public class GPUImageVibranceFilter extends BaseGPUImageFilter {
     public static final String VIBRANCE_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +
             "\n" +

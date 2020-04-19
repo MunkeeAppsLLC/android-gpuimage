@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class GPUImageTransformFilter extends GPUImageFilter {
+public class GPUImageTransformFilter extends BaseGPUImageFilter {
     public static final String TRANSFORM_VERTEX_SHADER = "" +
             "attribute vec4 position;\n" +
             " attribute vec4 inputTextureCoordinate;\n" +

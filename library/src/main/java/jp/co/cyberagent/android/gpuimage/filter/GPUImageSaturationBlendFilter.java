@@ -16,7 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
-public class GPUImageSaturationBlendFilter extends GPUImageTwoInputFilter {
+public class GPUImageSaturationBlendFilter extends BaseGPUImageTwoInputFilter {
     public static final String SATURATION_BLEND_FRAGMENT_SHADER = "varying highp vec2 textureCoordinate;\n" +
             " varying highp vec2 textureCoordinate2;\n" +
             " \n" +

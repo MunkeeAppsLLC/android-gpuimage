@@ -38,6 +38,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
 import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 import jp.co.cyberagent.android.gpuimage.util.Rotation;
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
@@ -90,9 +91,12 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     private float backgroundBlue = 0f;
     private float backgroundAlpha = 0f;
 
+    public GPUImageRenderer() {
+        this(new GPUImageIdentityFilter());
+    }
+
     public GPUImageRenderer(final GPUImageFilter filter) {
         this.filter = filter;
-
         glCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer();
@@ -108,7 +112,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
         GLES20.glClearColor(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
-        filter.ifNeedInit();
+        filter.initIfNeeded();
     }
 
     @Override
@@ -217,7 +221,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
                 if (oldFilter != null) {
                     oldFilter.destroy();
                 }
-                GPUImageRenderer.this.filter.ifNeedInit();
+                GPUImageRenderer.this.filter.initIfNeeded();
                 GLES20.glUseProgram(GPUImageRenderer.this.filter.getProgram());
                 GPUImageRenderer.this.filter.onOutputSizeChanged(outputWidth, outputHeight);
             }

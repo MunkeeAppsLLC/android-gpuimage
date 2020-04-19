@@ -236,7 +236,7 @@ public class GPUImageView extends FrameLayout {
     /**
      * Set the filter to be applied on the image.
      *
-     * @param filter Filter that should be applied on the image.
+     * @param filter GPUImageFilter that should be applied on the image.
      */
     public void setFilter(GPUImageFilter filter) {
         this.filter = filter;

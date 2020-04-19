@@ -16,7 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
-public class GPUImageColorDodgeBlendFilter extends GPUImageTwoInputFilter {
+public class GPUImageColorDodgeBlendFilter extends BaseGPUImageTwoInputFilter {
     public static final String COLOR_DODGE_BLEND_FRAGMENT_SHADER = "precision mediump float;\n" +
             " \n" +
             " varying highp vec2 textureCoordinate;\n" +

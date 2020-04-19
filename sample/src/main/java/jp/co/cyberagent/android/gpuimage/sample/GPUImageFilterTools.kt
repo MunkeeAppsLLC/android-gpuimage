@@ -29,7 +29,7 @@ object GPUImageFilterTools {
 
     fun showDialog(
         context: Context,
-        listener: (filter: GPUImageFilter) -> Unit
+        listener: (filter: BaseGPUImageFilter) -> Unit
     ) {
         val filters = FilterList().apply {
             addFilter("3DLUT Amatorka ", FilterType.LOOKUP_AMATORKA)
@@ -140,7 +140,7 @@ object GPUImageFilterTools {
         builder.create().show()
     }
 
-    private fun createFilterForType(context: Context, type: FilterType): GPUImageFilter {
+    private fun createFilterForType(context: Context, type: FilterType): BaseGPUImageFilter {
         return when (type) {
             FilterType.CONTRAST -> GPUImageContrastFilter(2.0f)
             FilterType.GAMMA -> GPUImageGammaFilter(2.0f)
@@ -333,15 +333,15 @@ object GPUImageFilterTools {
 
     private fun createBlendFilter(
         context: Context,
-        filterClass: Class<out GPUImageTwoInputFilter>
-    ): GPUImageFilter {
+        filterClass: Class<out BaseGPUImageTwoInputFilter>
+    ): BaseGPUImageFilter {
         return try {
             filterClass.newInstance().apply {
                 bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.ic_launcher)
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            GPUImageFilter()
+            GPUImageIdentityFilter()
         }
     }
 
@@ -362,8 +362,8 @@ object GPUImageFilterTools {
         }
     }
 
-    class FilterAdjuster(filter: GPUImageFilter) {
-        private val adjuster: Adjuster<out GPUImageFilter>?
+    class FilterAdjuster(filter: BaseGPUImageFilter) {
+        private val adjuster: Adjuster<out BaseGPUImageFilter>?
 
         init {
             adjuster = when (filter) {
@@ -420,7 +420,7 @@ object GPUImageFilterTools {
             adjuster?.adjust(percentage)
         }
 
-        private abstract inner class Adjuster<T : GPUImageFilter>(protected val filter: T) {
+        private abstract inner class Adjuster<T : BaseGPUImageFilter>(protected val filter: T) {
 
             abstract fun adjust(percentage: Int)
 

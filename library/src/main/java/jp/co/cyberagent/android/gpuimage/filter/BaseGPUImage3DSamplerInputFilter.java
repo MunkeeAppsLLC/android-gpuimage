@@ -26,7 +26,7 @@ import java.nio.IntBuffer;
 
 import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
-public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
+public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilter {
     private static final String VERTEX_SHADER = "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
             "attribute vec4 inputTextureCoordinate2;\n" +
@@ -52,11 +52,11 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     private int textureHeight;
     private int textureDepth;
 
-    public GPUImage3DSamplerInputFilter(String fragmentShader) {
+    public BaseGPUImage3DSamplerInputFilter(String fragmentShader) {
         this(VERTEX_SHADER, fragmentShader);
     }
 
-    public GPUImage3DSamplerInputFilter(String vertexShader, String fragmentShader) {
+    public BaseGPUImage3DSamplerInputFilter(String vertexShader, String fragmentShader) {
         super(vertexShader, fragmentShader);
     }
 
@@ -159,7 +159,7 @@ public class GPUImage3DSamplerInputFilter extends GPUImageFilter {
     }
 
     @Override
-    protected void onDrawArraysPre() {
+    public void onDrawArraysPre() {
         GLES30.glEnableVertexAttribArray(filterSecondTextureCoordinateAttribute);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, filterSourceTexture2);

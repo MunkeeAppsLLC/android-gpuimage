@@ -16,7 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
-public class GPUImageScreenBlendFilter extends GPUImageTwoInputFilter {
+public class GPUImageScreenBlendFilter extends BaseGPUImageTwoInputFilter {
     public static final String SCREEN_BLEND_FRAGMENT_SHADER = "varying highp vec2 textureCoordinate;\n" +
             " varying highp vec2 textureCoordinate2;\n" +
             "\n" +

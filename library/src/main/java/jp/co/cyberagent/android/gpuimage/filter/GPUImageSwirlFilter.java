@@ -22,7 +22,7 @@ import android.opengl.GLES20;
 /**
  * Creates a swirl distortion on the image.
  */
-public class GPUImageSwirlFilter extends GPUImageFilter {
+public class GPUImageSwirlFilter extends BaseGPUImageFilter {
     public static final String SWIRL_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +
             "\n" +

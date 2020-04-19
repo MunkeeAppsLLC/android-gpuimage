@@ -28,9 +28,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import jp.co.cyberagent.android.gpuimage.GPUImage
 import jp.co.cyberagent.android.gpuimage.GPUImageView
-import jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageFilter
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageTwoInputFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -94,12 +94,15 @@ class GalleryActivity : AppCompatActivity() {
 
     private fun saveImage() {
         val fileName = System.currentTimeMillis().toString() + ".jpg"
-        gpuImageView.saveToPictures("GPUImage", fileName) { uri ->
-            Toast.makeText(this, "Saved: $uri", Toast.LENGTH_SHORT).show()
+        gpuImageView.saveToPictures2("GPUImage", fileName) {
+            Toast.makeText(this, "Saved: $it", Toast.LENGTH_SHORT).show()
         }
+//        gpuImageView.saveToPictures("GPUImage", fileName) { uri ->
+//            Toast.makeText(this, "Saved: $uri", Toast.LENGTH_SHORT).show()
+//        }
     }
 
-    private fun switchFilterTo(filter: GPUImageFilter) {
+    private fun switchFilterTo(filter: BaseGPUImageFilter) {
         gpuImageView.filter = filter
         filterAdjuster = FilterAdjuster(filter)
         if (filterAdjuster!!.canAdjust()) {
@@ -109,8 +112,8 @@ class GalleryActivity : AppCompatActivity() {
             seekBar.visibility = View.GONE
         }
         when (filter) {
-            is GPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
-            is GPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+            is BaseGPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
+            is BaseGPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
         }
 //        if(gpuImageView.parent == null) {
 //            gpuImageContainerView.addView(gpuImageView)

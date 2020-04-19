@@ -8,7 +8,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 import android.opengl.GLES20;
 
 
-public class GPUImageBilateralBlurFilter extends GPUImageFilter {
+public class GPUImageBilateralBlurFilter extends BaseGPUImageFilter {
     public static final String BILATERAL_VERTEX_SHADER = "" +
             "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +

@@ -18,7 +18,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
-public class GPUImageHueFilter extends GPUImageFilter {
+public class GPUImageHueFilter extends BaseGPUImageFilter {
     public static final String HUE_FRAGMENT_SHADER = "" +
             "precision highp float;\n" +
             "varying highp vec2 textureCoordinate;\n" +

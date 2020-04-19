@@ -24,7 +24,7 @@ import android.opengl.GLES20;
  * green:
  * blue:
  */
-public class GPUImageRGBFilter extends GPUImageFilter {
+public class GPUImageRGBFilter extends BaseGPUImageFilter {
     public static final String RGB_FRAGMENT_SHADER = "" +
             "  varying highp vec2 textureCoordinate;\n" +
             "  \n" +

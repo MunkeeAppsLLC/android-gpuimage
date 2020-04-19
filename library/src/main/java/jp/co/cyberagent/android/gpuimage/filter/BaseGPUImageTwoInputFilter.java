@@ -27,7 +27,7 @@ import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 import jp.co.cyberagent.android.gpuimage.util.Rotation;
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
-public class GPUImageTwoInputFilter extends GPUImageFilter {
+public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
     private static final String VERTEX_SHADER =
             "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
@@ -51,11 +51,11 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     private ByteBuffer texture2CoordinatesBuffer;
     private Bitmap bitmap;
 
-    public GPUImageTwoInputFilter(String fragmentShader) {
+    public BaseGPUImageTwoInputFilter(String fragmentShader) {
         this(VERTEX_SHADER, fragmentShader);
     }
 
-    public GPUImageTwoInputFilter(String vertexShader, String fragmentShader) {
+    public BaseGPUImageTwoInputFilter(String vertexShader, String fragmentShader) {
         super(vertexShader, fragmentShader);
         setRotation(Rotation.NORMAL, false, false);
     }
@@ -119,9 +119,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
             bitmap = null;
         }
         setInputImageTexture2Loaded(false);
-        GLES20.glDeleteTextures(1, new int[]{
-                filterSourceTexture2
-        }, 0);
+        GLES20.glDeleteTextures(1, new int[]{ filterSourceTexture2 }, 0);
         filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
     }
 
@@ -131,7 +129,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
     }
 
     @Override
-    protected void onDrawArraysPre() {
+    public void onDrawArraysPre() {
         GLES20.glEnableVertexAttribArray(filterSecondTextureCoordinateAttribute);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, filterSourceTexture2);

@@ -24,7 +24,7 @@ import android.opengl.GLES20;
  * temperature:
  * tint:
  */
-public class GPUImageWhiteBalanceFilter extends GPUImageFilter {
+public class GPUImageWhiteBalanceFilter extends BaseGPUImageFilter {
     public static final String WHITE_BALANCE_FRAGMENT_SHADER = "" +
             "uniform sampler2D inputImageTexture;\n" +
             "varying highp vec2 textureCoordinate;\n" +

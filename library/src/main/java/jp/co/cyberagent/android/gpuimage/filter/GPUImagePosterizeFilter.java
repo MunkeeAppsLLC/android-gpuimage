@@ -23,7 +23,7 @@ import android.opengl.GLES20;
  * <br>
  * colorLevels: ranges from 1 to 256, with a default of 10
  */
-public class GPUImagePosterizeFilter extends GPUImageFilter {
+public class GPUImagePosterizeFilter extends BaseGPUImageFilter {
     public static final String POSTERIZE_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +
             "\n" +

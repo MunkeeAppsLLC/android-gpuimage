@@ -29,7 +29,7 @@ import java.util.Comparator;
 
 import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
-public class GPUImageToneCurveFilter extends GPUImageFilter {
+public class GPUImageToneCurveFilter extends BaseGPUImageFilter {
     public static final String TONE_CURVE_FRAGMENT_SHADER = "" +
             " varying highp vec2 textureCoordinate;\n" +
             " uniform sampler2D inputImageTexture;\n" +
@@ -92,7 +92,7 @@ public class GPUImageToneCurveFilter extends GPUImageFilter {
     }
 
     @Override
-    protected void onDrawArraysPre() {
+    public void onDrawArraysPre() {
         if (toneCurveTexture[0] != OpenGlUtils.NO_TEXTURE) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, toneCurveTexture[0]);
