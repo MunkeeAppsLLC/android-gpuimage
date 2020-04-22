@@ -184,9 +184,17 @@ public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
         this.setGrainSize(grainSize);
     }
 
+    public float getTime() {
+        return time;
+    }
+
     public void setTime(float time) {
         this.time = time;
         this.setFloat(timeLocation, time);
+    }
+
+    public float getScale() {
+        return scale;
     }
 
     public void setScale(float scale) {
@@ -194,29 +202,21 @@ public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
         this.setFloat(scaleLocation, scale);
     }
 
+    public float getGrainAmount() {
+        return grainAmount;
+    }
+
     public void setGrainAmount(float grainAmount) {
         this.grainAmount = grainAmount;
         this.setFloat(grainAmmountLocation, grainAmount);
     }
 
+    public float getGrainSize() {
+        return grainSize;
+    }
+
     public void setGrainSize(float grainSize) {
         this.grainSize = grainSize;
         this.setFloat(grainSizeLocation, grainSize);
-    }
-
-    public float getTime() {
-        return time;
-    }
-
-    public float getScale() {
-        return scale;
-    }
-
-    public float getGrainAmount() {
-        return grainAmount;
-    }
-
-    public float getGrainSize() {
-        return grainSize;
     }
 }

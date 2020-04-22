@@ -11,7 +11,7 @@ uniform lowp float intensity;
 uniform sampler3D inputImageTexture2;
 void main() {
     vec4 textureColor= texture2D(inputImageTexture, textureCoordinate);
-    if(isInputImageTexture2Loaded == 0) {
+    if (isInputImageTexture2Loaded == 0) {
         gl_FragColor = textureColor;
     } else {
         vec4 newColor = texture3D(inputImageTexture2, textureColor.rgb);

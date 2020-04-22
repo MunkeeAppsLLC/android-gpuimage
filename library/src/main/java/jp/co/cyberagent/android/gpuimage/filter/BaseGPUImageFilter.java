@@ -19,22 +19,26 @@ package jp.co.cyberagent.android.gpuimage.filter;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.view.View;
+
 import androidx.annotation.RawRes;
-import jp.co.cyberagent.android.gpuimage.R;
-import jp.co.cyberagent.android.gpuimage.util.FilterUtils;
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.FloatBuffer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import jp.co.cyberagent.android.gpuimage.R;
+import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
+
+import static jp.co.cyberagent.android.gpuimage.util.FilterUtils.checkIsFalse;
+import static jp.co.cyberagent.android.gpuimage.util.FilterUtils.loadShader;
+
 public abstract class BaseGPUImageFilter implements GPUImageFilter {
 
-    private final Queue<Runnable> runOnDraw;
     protected final String vertexShader;
     protected final String fragmentShader;
-
+    private final Queue<Runnable> runOnDraw;
     private int glProgId;
     private int glAttribPosition;
     private int glUniformTexture;
@@ -70,14 +74,14 @@ public abstract class BaseGPUImageFilter implements GPUImageFilter {
                                @RawRes final int fragmentShaderResId) {
         this.runOnDraw = new ConcurrentLinkedQueue<>();
         if (vertexShader == null) {
-            assert (vertexShaderResId == View.NO_ID) : "vertexShader == null && vertexShaderResId not set";
-            this.vertexShader = FilterUtils.loadShader(vertexShaderResId);
+            checkIsFalse(vertexShaderResId == View.NO_ID, "vertexShader == null && vertexShaderResId not set");
+            this.vertexShader = loadShader(vertexShaderResId);
         } else {
             this.vertexShader = vertexShader;
         }
         if (fragmentShader == null) {
-            assert (fragmentShaderResId == View.NO_ID) : "fragmentShader == null && fragmentShaderResId not set";
-            this.fragmentShader = FilterUtils.loadShader(fragmentShaderResId);
+            checkIsFalse(vertexShaderResId == View.NO_ID, "vertexShader == null && vertexShaderResId not set");
+            this.fragmentShader = loadShader(fragmentShaderResId);
         } else {
             this.fragmentShader = fragmentShader;
         }

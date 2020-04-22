@@ -19,4 +19,15 @@ object FilterUtils {
                 }
             }
 
+    @JvmStatic
+    fun checkIsFalse(value: Boolean, message: String) {
+        checkIsTrue(value.not(), message)
+    }
+
+    @JvmStatic
+    fun checkIsTrue(value: Boolean, message: String) {
+        if (value.not()) {
+            throw IllegalStateException(message)
+        }
+    }
 }

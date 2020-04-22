@@ -20,7 +20,9 @@ public class GPUImageTwoPassFilter extends GPUImageFilterGroup {
     public GPUImageTwoPassFilter(String firstVertexShader, String firstFragmentShader,
                                  String secondVertexShader, String secondFragmentShader) {
         super();
-        addFilter(new GPUImageIdentityFilter(firstVertexShader, firstFragmentShader));
-        addFilter(new GPUImageIdentityFilter(secondVertexShader, secondFragmentShader));
+        addFilter(new BaseGPUImageFilter(firstVertexShader, firstFragmentShader) {
+        });
+        addFilter(new BaseGPUImageFilter(secondVertexShader, secondFragmentShader) {
+        });
     }
 }

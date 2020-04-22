@@ -90,9 +90,17 @@ public class GPUImageVignetteFilter extends BaseGPUImageFilter {
         setVignetteEnd(vignetteEnd);
     }
 
+    public PointF getVignetteCenter() {
+        return vignetteCenter;
+    }
+
     public void setVignetteCenter(final PointF vignetteCenter) {
         this.vignetteCenter = vignetteCenter;
         setPoint(vignetteCenterLocation, this.vignetteCenter);
+    }
+
+    public float[] getVignetteColor() {
+        return vignetteColor;
     }
 
     public void setVignetteColor(final float[] vignetteColor) {
@@ -100,29 +108,21 @@ public class GPUImageVignetteFilter extends BaseGPUImageFilter {
         setFloatVec3(vignetteColorLocation, this.vignetteColor);
     }
 
+    public float getVignetteStart() {
+        return vignetteStart;
+    }
+
     public void setVignetteStart(final float vignetteStart) {
         this.vignetteStart = vignetteStart;
         setFloat(vignetteStartLocation, this.vignetteStart);
     }
 
+    public float getVignetteEnd() {
+        return vignetteEnd;
+    }
+
     public void setVignetteEnd(final float vignetteEnd) {
         this.vignetteEnd = vignetteEnd;
         setFloat(vignetteEndLocation, this.vignetteEnd);
-    }
-
-    public PointF getVignetteCenter() {
-        return vignetteCenter;
-    }
-
-    public float[] getVignetteColor() {
-        return vignetteColor;
-    }
-
-    public float getVignetteStart() {
-        return vignetteStart;
-    }
-
-    public float getVignetteEnd() {
-        return vignetteEnd;
     }
 }

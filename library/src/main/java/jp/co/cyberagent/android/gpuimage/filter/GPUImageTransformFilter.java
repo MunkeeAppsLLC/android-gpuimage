@@ -74,7 +74,7 @@ public class GPUImageTransformFilter extends BaseGPUImageFilter {
     }
 
     protected void clearBufferBit() {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     }
 
     @Override
@@ -106,13 +106,13 @@ public class GPUImageTransformFilter extends BaseGPUImageFilter {
         super.onDraw(textureId, vertBuffer, textureBuffer);
     }
 
+    public float[] getTransform3D() {
+        return transform3D;
+    }
+
     public void setTransform3D(float[] transform3D) {
         this.transform3D = transform3D;
         setUniformMatrix4f(transformMatrixUniform, transform3D);
-    }
-
-    public float[] getTransform3D() {
-        return transform3D;
     }
 
     public void setIgnoreAspectRatio(boolean ignoreAspectRatio) {

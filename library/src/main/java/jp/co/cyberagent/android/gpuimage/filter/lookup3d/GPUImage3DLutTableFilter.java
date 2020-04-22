@@ -104,13 +104,13 @@ public class GPUImage3DLutTableFilter extends BaseGPUImageTwoInputFilter {
         }
     }
 
+    public float getIntensity() {
+        return intensity;
+    }
+
     public void setIntensity(final float intensity) {
         this.intensity = intensity;
         setFloat(intensityLocation, this.intensity);
-    }
-
-    public float getIntensity() {
-        return intensity;
     }
 
     private void setDimension(float dimension) {

@@ -82,21 +82,21 @@ public class GPUImageWhiteBalanceFilter extends BaseGPUImageFilter {
         setTint(tint);
     }
 
+    public float getTemperature() {
+        return temperature;
+    }
+
     public void setTemperature(final float temperature) {
         this.temperature = temperature;
         setFloat(temperatureLocation, this.temperature < 5000 ? (float) (0.0004 * (this.temperature - 5000.0)) : (float) (0.00006 * (this.temperature - 5000.0)));
     }
 
+    public float getTint() {
+        return tint;
+    }
+
     public void setTint(final float tint) {
         this.tint = tint;
         setFloat(tintLocation, (float) (this.tint / 100.0));
-    }
-
-    public float getTemperature() {
-        return temperature;
-    }
-
-    public float getTint() {
-        return tint;
     }
 }

@@ -12,10 +12,24 @@ import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
-import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL10;
 
-import static javax.microedition.khronos.egl.EGL10.*;
+import static javax.microedition.khronos.egl.EGL10.EGL_ALPHA_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_BLUE_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_DEFAULT_DISPLAY;
+import static javax.microedition.khronos.egl.EGL10.EGL_DEPTH_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_GREEN_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_HEIGHT;
+import static javax.microedition.khronos.egl.EGL10.EGL_NONE;
+import static javax.microedition.khronos.egl.EGL10.EGL_NO_CONTEXT;
+import static javax.microedition.khronos.egl.EGL10.EGL_RED_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_STENCIL_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_WIDTH;
 
 public class PixelBuffer {
     private final static String TAG = "PixelBuffer";
@@ -101,9 +115,7 @@ public class PixelBuffer {
 
         // Call the renderer draw routine (it seems that some filters do not
         // work if this is only called once)
-        for (int i = 0; i < 60; i++) {
-            draw();
-        }
+        draw();
         convertToBitmap();
         return bitmap;
     }

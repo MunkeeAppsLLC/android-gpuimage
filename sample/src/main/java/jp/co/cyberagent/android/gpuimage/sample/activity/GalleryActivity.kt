@@ -44,7 +44,7 @@ class GalleryActivity : AppCompatActivity() {
     private val gpuImageContainerView: FrameLayout by lazy { findViewById<FrameLayout>(R.id.gpuimage_container) }
     private val seekBar: SeekBar by lazy { findViewById<SeekBar>(R.id.seekBar) }
     private val lutTableImage: ImageView by lazy { findViewById<ImageView>(R.id.lut_table) }
-    private lateinit var imageUri: Uri
+    private var imageUri: Uri? = null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,9 +76,11 @@ class GalleryActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_PICK_IMAGE -> if (resultCode == RESULT_OK) {
-                imageUri = data!!.data
-                gpuImageView.setImage(data!!.data)
-                gpuImageView.postInvalidate()
+                data?.data.let {
+                    imageUri = it
+                    gpuImageView.setImage(it)
+                    gpuImageView.postInvalidate()
+                }
             } else {
                 finish()
             }

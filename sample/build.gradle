@@ -34,7 +34,7 @@ repositories {
 }
 
 dependencies {
-    implementation project(':library')
+    implementation project(':gpuimage')
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }

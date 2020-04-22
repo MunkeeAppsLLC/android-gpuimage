@@ -1,5 +1,5 @@
 varying highp vec2 textureCoordinate;
-varying highp vec2 textureCoordinate2; // TODO: This is not used
+varying highp vec2 textureCoordinate2;// TODO: This is not used
 
 uniform sampler2D inputImageTexture;
 uniform sampler2D inputImageTexture2;// lookup texture
@@ -9,8 +9,8 @@ uniform lowp float intensity;
 
 void main()
 {
-    vec2 tiles      = vec2( 17.0, 17.0 );   // original texture vec2( 8.0, 8.0 )
-    vec2 colTexSize = vec2( 17.0, 289.0 );  // original texture vec2( 512.0, 512.0 )
+    vec2 tiles      = vec2(17.0, 17.0);// original texture vec2( 8.0, 8.0 )
+    vec2 colTexSize = vec2(17.0, 289.0);// original texture vec2( 512.0, 512.0 )
 
     highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);
 

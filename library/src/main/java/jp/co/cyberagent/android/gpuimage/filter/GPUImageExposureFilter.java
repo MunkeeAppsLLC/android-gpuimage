@@ -59,12 +59,12 @@ public class GPUImageExposureFilter extends BaseGPUImageFilter {
         setExposure(exposure);
     }
 
+    public float getExposure() {
+        return exposure;
+    }
+
     public void setExposure(final float exposure) {
         this.exposure = exposure;
         setFloat(exposureLocation, this.exposure);
-    }
-
-    public float getExposure() {
-        return exposure;
     }
 }

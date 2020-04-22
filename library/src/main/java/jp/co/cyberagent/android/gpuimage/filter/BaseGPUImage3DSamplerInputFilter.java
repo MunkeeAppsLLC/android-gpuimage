@@ -64,15 +64,6 @@ public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilte
         }
     }
 
-    /**
-     * Assuming the texture is a cube, based on width and height, will compute a the texture dimension
-     * @param texture
-     */
-    public void setTexture(final Bitmap texture) {
-        int dimension = computeCubeDimension(texture);
-        this.setTexture(texture, dimension, dimension, dimension);
-    }
-
     public void setTexture(final Bitmap texture,
                            final int textureWidth, final int textureHeight, final int textureDepth) {
         if (this.texture != null || texture == null || texture.isRecycled()) {
@@ -105,6 +96,16 @@ public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilte
 
     public Bitmap getTexture() {
         return texture;
+    }
+
+    /**
+     * Assuming the texture is a cube, based on width and height, will compute a the texture dimension
+     *
+     * @param texture
+     */
+    public void setTexture(final Bitmap texture) {
+        int dimension = computeCubeDimension(texture);
+        this.setTexture(texture, dimension, dimension, dimension);
     }
 
     public int getTextureWidth() {

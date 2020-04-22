@@ -65,12 +65,12 @@ public class GPUImageSaturationFilter extends BaseGPUImageFilter {
         setSaturation(saturation);
     }
 
+    public float getSaturation() {
+        return saturation;
+    }
+
     public void setSaturation(final float saturation) {
         this.saturation = saturation;
         setFloat(saturationLocation, this.saturation);
-    }
-
-    public float getSaturation() {
-        return saturation;
     }
 }
