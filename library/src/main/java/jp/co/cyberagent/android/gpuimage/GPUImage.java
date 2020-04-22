@@ -380,6 +380,14 @@ public class GPUImage {
         return getBitmapWithFilterApplied(bitmap, false);
     }
 
+    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, int width, int height) {
+        return getBitmapWithFilterApplied(bitmap, width, height, false);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, final boolean recycle) {
+        return getBitmapWithFilterApplied(bitmap, bitmap.getWidth(), bitmap.getHeight(), recycle);
+    }
+
     /**
      * Gets the given bitmap with current filter applied as a Bitmap.
      *
@@ -387,49 +395,53 @@ public class GPUImage {
      * @param recycle recycle the bitmap or not.
      * @return the bitmap with filter applied
      */
-    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, boolean recycle) {
-        if (glSurfaceView != null || glTextureView != null) {
-            renderer.deleteImage();
-            renderer.runOnDraw(new Runnable() {
+    public synchronized Bitmap getBitmapWithFilterApplied(
+            final Bitmap bitmap,
+            final int width, final int height,
+            final boolean recycle
+    ) {
+        final Bitmap[] result = {null};
+        final CountDownLatch parentLatch = new CountDownLatch(1);
+        new Thread(() -> {
+            final CountDownLatch latch = new CountDownLatch(1);
+            final GPUImageRenderer bufferRenderer = new GPUImageRenderer();
+            GPUImageFilter bufferFilter = filter.copy();
+            bufferRenderer.setRotation(
+                    Rotation.NORMAL,
+                    this.renderer.isFlippedHorizontally(),
+                    this.renderer.isFlippedVertically()
+            );
+            bufferRenderer.setScaleType(scaleType);
+            bufferRenderer.setMatrix(matrix);
 
-                @Override
-                public void run() {
-                    synchronized (filter) {
-                        filter.destroy();
-                        filter.notify();
-                    }
-                }
+            final PixelBuffer buffer = new PixelBuffer(width, height);
+            buffer.setRenderer(bufferRenderer);
+            bufferRenderer.setImageBitmap(bitmap, recycle);
+            buffer.draw();
+            bufferRenderer.setFilter(bufferFilter);
+            buffer.draw();
+            bufferRenderer.runOnDrawEnd(() -> {
+                result[0] = buffer.getBitmap();
+                latch.countDown();
             });
-            synchronized (filter) {
-                requestRender();
-                try {
-                    filter.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            buffer.draw();
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                bufferFilter.destroy();
+                buffer.destroy();
+//                renderer.setFilter(filter);
+                parentLatch.countDown();
             }
+        }).start();
+        try {
+            parentLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-        GPUImageRenderer renderer = new GPUImageRenderer(filter);
-        renderer.setRotation(Rotation.NORMAL,
-                this.renderer.isFlippedHorizontally(), this.renderer.isFlippedVertically());
-        renderer.setScaleType(scaleType);
-        renderer.setMatrix(matrix);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
-        renderer.setImageBitmap(bitmap, recycle);
-        Bitmap result = buffer.getBitmap();
-        filter.destroy();
-        renderer.deleteImage();
-        buffer.destroy();
-
-        this.renderer.setFilter(filter);
-        if (currentBitmap != null) {
-            this.renderer.setImageBitmap(currentBitmap, false);
-        }
-        requestRender();
-
-        return result;
+        return result[0];
     }
 
     /**
@@ -597,7 +609,8 @@ public class GPUImage {
 
         @Override
         protected Void doInBackground(final Void... params) {
-            Bitmap result = gpuImage.getBitmapWithFilterApplied(bitmap);
+            Bitmap result;
+            result = gpuImage.getBitmapWithFilterApplied(bitmap);
             saveImage(folderName, fileName, result);
             return null;
         }

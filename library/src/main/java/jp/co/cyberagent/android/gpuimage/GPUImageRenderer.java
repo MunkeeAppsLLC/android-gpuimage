@@ -94,15 +94,27 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     }
 
     public GPUImageRenderer(final GPUImageFilter filter) {
-        this.filter = filter;
-        glCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        glCubeBuffer.put(ZERO).position(0);
+        this(filter,
+                ByteBuffer.allocateDirect(CUBE.length * 4)
+                        .order(ByteOrder.nativeOrder())
+                        .asFloatBuffer(),
+                ByteBuffer.allocateDirect(TEXTURE_NO_ROTATION.length * 4)
+                        .order(ByteOrder.nativeOrder())
+                        .asFloatBuffer()
+        );
+        this.glCubeBuffer.put(ZERO).position(0);
+    }
 
-        glTextureBuffer = ByteBuffer.allocateDirect(TEXTURE_NO_ROTATION.length * 4)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
+    public GPUImageRenderer(final FloatBuffer glCubeBuffer, final FloatBuffer glTextureBuffer) {
+        this(new GPUImageIdentityFilter(), glCubeBuffer, glTextureBuffer);
+    }
+
+    public GPUImageRenderer(final GPUImageFilter filter,
+                            final FloatBuffer glCubeBuffer,
+                            final FloatBuffer glTextureBuffer) {
+        this.filter = filter;
+        this.glCubeBuffer = glCubeBuffer;
+        this.glTextureBuffer = glTextureBuffer;
         setRotation(Rotation.NORMAL, false, false);
     }
 
@@ -233,7 +245,11 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         setImageBitmap(bitmap, true);
     }
 
-    public void setImageBitmap(final Bitmap bitmap, final boolean recycle) {
+    public void setImageBitmap(Bitmap bitmap, boolean recycle) {
+        setImageBitmap(bitmap, recycle, null);
+    }
+
+    public void setImageBitmap(final Bitmap bitmap, final boolean recycle, final Runnable onImageLoaded) {
         if (bitmap == null) {
             return;
         }
@@ -421,5 +437,36 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     public int getImageHeight() {
         return imageHeight;
+    }
+
+    public FloatBuffer getGlCubeBuffer() {
+        return glCubeBuffer;
+    }
+
+    public FloatBuffer getGlTextureBuffer() {
+        return glTextureBuffer;
+    }
+
+
+    public Bitmap capture() {
+//        int[] frame = new int[1];
+//        GLES20.glGenFramebuffers(1, frame, 0);
+//        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frame[0]);
+//        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, glTextureId, 0);
+
+        IntBuffer buffer = IntBuffer.allocate(outputWidth * outputHeight);
+        GLES20.glReadPixels(0, 0, outputWidth, outputHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
+        Bitmap bitmap = Bitmap.createBitmap(outputWidth, outputHeight, Bitmap.Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(IntBuffer.wrap(buffer.array()));
+
+
+//        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+//        GLES20.glDeleteFramebuffers(1, frame, 0);
+//
+        return bitmap;
+    }
+
+    public void clearFilter() {
+        this.setFilter(new GPUImageIdentityFilter());
     }
 }

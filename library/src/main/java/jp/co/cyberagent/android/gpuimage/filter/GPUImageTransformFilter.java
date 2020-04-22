@@ -138,4 +138,14 @@ public class GPUImageTransformFilter extends BaseGPUImageFilter {
     public boolean anchorTopLeft() {
         return anchorTopLeft;
     }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImageTransformFilter result = new GPUImageTransformFilter();
+        result.setAnchorTopLeft(anchorTopLeft);
+        result.setIgnoreAspectRatio(ignoreAspectRatio);
+        result.setTransform3D(transform3D);
+        return result;
+    }
 }

@@ -314,6 +314,14 @@ public class GPUImageView extends FrameLayout {
         new SaveTask(folderName, fileName, listener).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    public void saveToPictures2(String folderName, String fileName, GPUImage.OnPictureSavedListener listener) {
+        gpuImage.saveToPictures(folderName, fileName, listener);
+    }
+
+    public void saveToPictures2(Bitmap bitmap, String folderName, String fileName, GPUImage.OnPictureSavedListener listener) {
+        gpuImage.saveToPictures(bitmap, folderName, fileName, listener);
+    }
+
     /**
      * Save current image with applied filter to Pictures. It will be stored on
      * the default Picture folder on the phone below the given folderName and
@@ -418,6 +426,22 @@ public class GPUImageView extends FrameLayout {
         waiter.acquire();
 
         return resultBitmap;
+    }
+
+    public Bitmap alternateCapture() throws InterruptedException {
+        final Semaphore waiter = new Semaphore(0);
+        final Bitmap[] result = {null};
+        gpuImage.runOnGLThread(() -> {
+            result[0] = gpuImage.capture();
+            waiter.release();
+        });
+        requestRender();
+        waiter.acquire();
+        return result[0];
+    }
+
+    public Bitmap getBitmapWithFilterApplied() throws InterruptedException {
+        return gpuImage.getBitmapWithFilterApplied();
     }
 
     /**
@@ -621,17 +645,5 @@ public class GPUImageView extends FrameLayout {
                 e.printStackTrace();
             }
         }
-    }
-
-    public interface OnPictureSavedListener {
-        void onPictureSaved(Uri uri);
-    }
-
-    public int getImageWidth() {
-        return getGPUImage().getImageWidth();
-    }
-
-    public int getImageHeight() {
-        return getGPUImage().getImageHeight();
     }
 }

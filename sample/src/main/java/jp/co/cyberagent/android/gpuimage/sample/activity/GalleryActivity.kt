@@ -31,6 +31,7 @@ import jp.co.cyberagent.android.gpuimage.GPUImageView
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageFilter
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageTwoInputFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFxaaFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -114,6 +115,12 @@ class GalleryActivity : AppCompatActivity() {
         when (filter) {
             is BaseGPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
             is BaseGPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+            is GPUImageFxaaFilter -> filter.apply {
+                resolution = arrayOf(
+                        gpuImageView.imageWidth.toFloat(), gpuImageView.imageHeight
+                        .toFloat()
+                ).toFloatArray()
+            }
         }
 //        if(gpuImageView.parent == null) {
 //            gpuImageContainerView.addView(gpuImageView)
