@@ -18,14 +18,15 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
+import androidx.annotation.RawRes;
+import jp.co.cyberagent.android.gpuimage.R;
+import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
+import jp.co.cyberagent.android.gpuimage.util.Rotation;
+import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
     private static final String VERTEX_SHADER =
@@ -41,7 +42,7 @@ public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
             "    gl_Position = position;\n" +
             "    textureCoordinate = inputTextureCoordinate.xy;\n" +
             "    textureCoordinate2 = inputTextureCoordinate2.xy;\n" +
-            "}";
+                    "}";
 
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
@@ -50,6 +51,11 @@ public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
     private boolean isInputImageTexture2Loaded = false;
     private ByteBuffer texture2CoordinatesBuffer;
     private Bitmap bitmap;
+
+    public BaseGPUImageTwoInputFilter(@RawRes int fragmentShader) {
+        super(R.raw.shader_two_input_2d, fragmentShader);
+        setRotation(Rotation.NORMAL, false, false);
+    }
 
     public BaseGPUImageTwoInputFilter(String fragmentShader) {
         this(VERTEX_SHADER, fragmentShader);
@@ -84,16 +90,14 @@ public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
             return;
         }
         this.bitmap = bitmap;
-        runOnDraw(new Runnable() {
-            public void run() {
-                if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
-                    if (bitmap == null || bitmap.isRecycled()) {
-                        return;
-                    }
-                    GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
-                    filterSourceTexture2 = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, false);
-                    setInputImageTexture2Loaded(true);
+        runOnDraw(() -> {
+            if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
+                if (bitmap == null || bitmap.isRecycled()) {
+                    return;
                 }
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
+                filterSourceTexture2 = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, false);
+                setInputImageTexture2Loaded(true);
             }
         });
     }

@@ -1,5 +1,7 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
+import org.jetbrains.annotations.NotNull;
+
 public class GPUImageClearBufferTransformFilter extends GPUImageTransformFilter {
 
     private boolean enableClearBuffer = true;
@@ -21,5 +23,16 @@ public class GPUImageClearBufferTransformFilter extends GPUImageTransformFilter 
 
     public void toggleClearBuffer() {
         this.enableClearBuffer = !enableClearBuffer;
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImageClearBufferTransformFilter result = new GPUImageClearBufferTransformFilter();
+        result.setAnchorTopLeft(anchorTopLeft());
+        result.setIgnoreAspectRatio(ignoreAspectRatio());
+        result.setTransform3D(getTransform3D());
+        result.setEnableClearBuffer(isEnableClearBuffer());
+        return result;
     }
 }

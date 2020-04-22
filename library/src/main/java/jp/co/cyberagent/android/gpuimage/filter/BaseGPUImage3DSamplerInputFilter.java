@@ -17,29 +17,18 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.graphics.Bitmap;
+import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.util.Log;
+import androidx.annotation.RawRes;
+import jp.co.cyberagent.android.gpuimage.R;
+import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
-
 public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilter {
-    private static final String VERTEX_SHADER = "attribute vec4 position;\n" +
-            "attribute vec4 inputTextureCoordinate;\n" +
-            "attribute vec4 inputTextureCoordinate2;\n" +
-            " \n" +
-            "varying vec2 textureCoordinate;\n" +
-            "varying vec3 textureCoordinate2;\n" +
-            " \n" +
-            "void main()\n" +
-            "{\n" +
-            "    gl_Position = position;\n" +
-            "    textureCoordinate = inputTextureCoordinate.xy;\n" +
-            "    textureCoordinate2 = inputTextureCoordinate2.xyz;\n" +
-            "}";
 
     private int filterSecondTextureCoordinateAttribute;
     private int filterInputTextureUniform2;
@@ -52,12 +41,8 @@ public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilte
     private int textureHeight;
     private int textureDepth;
 
-    public BaseGPUImage3DSamplerInputFilter(String fragmentShader) {
-        this(VERTEX_SHADER, fragmentShader);
-    }
-
-    public BaseGPUImage3DSamplerInputFilter(String vertexShader, String fragmentShader) {
-        super(vertexShader, fragmentShader);
+    public BaseGPUImage3DSamplerInputFilter(@RawRes int fragmentShader) {
+        super(R.raw.shader_two_input_3d, fragmentShader);
     }
 
     @Override
@@ -98,24 +83,22 @@ public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilte
         this.textureHeight = textureHeight;
         this.textureDepth = textureDepth;
         final int[] pixels = new int[texture.getWidth() * texture.getHeight()];
-        runOnDraw(new Runnable() {
-            public void run() {
-                if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
-                    if (texture == null || texture.isRecycled()) {
-                        return;
-                    }
-                    GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
-                    Log.e("OpenGLUtils", "0 "+GLES30.glGetError());
-                    texture.getPixels(pixels, 0, texture.getWidth(), 0, 0, texture.getWidth(), texture.getHeight());
-                    IntBuffer texBuffer = (IntBuffer) ByteBuffer.allocateDirect(pixels.length * Integer.SIZE)
-                            .order(ByteOrder.nativeOrder())
-                            .asIntBuffer()
-                            .put(pixels)
-                            .position(0);
-                    filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, textureWidth, textureHeight, textureDepth, OpenGlUtils.NO_TEXTURE);
-                    texBuffer.clear();
-                    setInputImageTexture2Loaded(true);
+        runOnDraw(() -> {
+            if (filterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {
+                if (texture == null || texture.isRecycled()) {
+                    return;
                 }
+                GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
+                Log.e("OpenGLUtils", "0 " + GLES30.glGetError());
+                texture.getPixels(pixels, 0, texture.getWidth(), 0, 0, texture.getWidth(), texture.getHeight());
+                IntBuffer texBuffer = (IntBuffer) ByteBuffer.allocateDirect(pixels.length * Integer.SIZE)
+                        .order(ByteOrder.nativeOrder())
+                        .asIntBuffer()
+                        .put(pixels)
+                        .position(0);
+                filterSourceTexture2 = OpenGlUtils.load3DTexture(texBuffer, textureWidth, textureHeight, textureDepth, OpenGlUtils.NO_TEXTURE);
+                texBuffer.clear();
+                setInputImageTexture2Loaded(true);
             }
         });
     }
@@ -141,21 +124,25 @@ public abstract class BaseGPUImage3DSamplerInputFilter extends BaseGPUImageFilte
         setInteger(isInputImageTexture2LoadedLocation, isInputImageTexture2Loaded ? 1 : 0);
     }
 
-    public void recycleBitmap() {
-        if (texture != null && !texture.isRecycled()) {
-            texture.recycle();
+    public void reset() {
+        reset(false);
+    }
+
+    public void reset(boolean recycleBitmap) {
+        if (texture != null) {
+            if (recycleBitmap && !texture.isRecycled()) {
+                texture.recycle();
+            }
             texture = null;
-            setInputImageTexture2Loaded(false);
         }
+        setInputImageTexture2Loaded(false);
+        GLES20.glDeleteTextures(1, new int[]{filterSourceTexture2}, 0);
+        filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
     }
 
     public void onDestroy() {
         super.onDestroy();
-        recycleBitmap();
-        GLES30.glDeleteTextures(1, new int[]{
-                filterSourceTexture2
-        }, 0);
-        filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+        reset();
     }
 
     @Override

@@ -20,12 +20,8 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.database.Cursor;
-import android.graphics.Bitmap;
+import android.graphics.*;
 import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.PixelFormat;
-import android.graphics.Point;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -37,23 +33,18 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.view.Display;
 import android.view.WindowManager;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
+import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * The main accessor for GPUImage functionality. This class helps to do common
@@ -304,6 +295,7 @@ public class GPUImage {
     public void setMatrix(Matrix matrix) {
         this.matrix = matrix;
         renderer.setMatrix(matrix);
+        requestRender();
     }
 
     /**
@@ -339,12 +331,7 @@ public class GPUImage {
      * @param uri the uri of the new image
      */
     public void setImage(final Uri uri) {
-        renderer.enqueueOnSurfaceChanged(new Runnable() {
-            @Override
-            public void run() {
-                new LoadImageUriTask(GPUImage.this, uri).execute();
-            }
-        });
+        renderer.enqueueOnSurfaceChanged(() -> new LoadImageUriTask(GPUImage.this, uri).execute());
     }
 
     /**
@@ -353,12 +340,7 @@ public class GPUImage {
      * @param file the file of the new image
      */
     public void setImage(final File file) {
-        renderer.enqueueOnSurfaceChanged(new Runnable() {
-            @Override
-            public void run() {
-                new LoadImageFileTask(GPUImage.this, file).execute();
-            }
-        });
+        renderer.enqueueOnSurfaceChanged(() -> new LoadImageFileTask(GPUImage.this, file).execute());
     }
 
     private String getPath(final Uri uri) {
@@ -630,18 +612,9 @@ public class GPUImage {
                         new String[]{
                                 file.toString()
                         }, null,
-                        new MediaScannerConnection.OnScanCompletedListener() {
-                            @Override
-                            public void onScanCompleted(final String path, final Uri uri) {
-                                if (listener != null) {
-                                    handler.post(new Runnable() {
-
-                                        @Override
-                                        public void run() {
-                                            listener.onPictureSaved(uri);
-                                        }
-                                    });
-                                }
+                        (path1, uri) -> {
+                            if (listener != null) {
+                                handler.post(() -> listener.onPictureSaved(uri));
                             }
                         });
             } catch (FileNotFoundException e) {

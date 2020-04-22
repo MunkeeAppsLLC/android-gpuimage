@@ -43,7 +43,7 @@ public class GPUImageGammaFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageGammaFilter(final float gamma) {
-        super(NO_FILTER_VERTEX_SHADER, GAMMA_FRAGMENT_SHADER);
+        super(GAMMA_FRAGMENT_SHADER);
         this.gamma = gamma;
     }
 

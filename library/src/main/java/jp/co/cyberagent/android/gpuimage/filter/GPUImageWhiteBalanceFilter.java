@@ -63,7 +63,7 @@ public class GPUImageWhiteBalanceFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageWhiteBalanceFilter(final float temperature, final float tint) {
-        super(NO_FILTER_VERTEX_SHADER, WHITE_BALANCE_FRAGMENT_SHADER);
+        super(WHITE_BALANCE_FRAGMENT_SHADER);
         this.temperature = temperature;
         this.tint = tint;
     }

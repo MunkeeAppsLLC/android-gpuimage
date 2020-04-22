@@ -122,7 +122,7 @@ public class GPUImageKuwaharaFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageKuwaharaFilter(int radius) {
-        super(NO_FILTER_VERTEX_SHADER, KUWAHARA_FRAGMENT_SHADER);
+        super(KUWAHARA_FRAGMENT_SHADER);
         this.radius = radius;
     }
 

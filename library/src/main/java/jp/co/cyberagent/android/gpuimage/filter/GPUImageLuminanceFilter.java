@@ -37,6 +37,6 @@ public class GPUImageLuminanceFilter extends BaseGPUImageFilter {
             "}";
 
     public GPUImageLuminanceFilter() {
-        super(NO_FILTER_VERTEX_SHADER, LUMINANCE_FRAGMENT_SHADER);
+        super(LUMINANCE_FRAGMENT_SHADER);
     }
 }

@@ -1,2 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="jp.co.cyberagent.android.gpuimage" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="jp.co.cyberagent.android.gpuimage">
+    <application>
+        <provider
+            android:name=".GPUImageContextProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"/>
+    </application>
+</manifest>

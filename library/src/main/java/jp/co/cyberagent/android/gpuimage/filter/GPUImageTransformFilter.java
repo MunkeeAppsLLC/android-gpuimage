@@ -18,26 +18,14 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import jp.co.cyberagent.android.gpuimage.R;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 public class GPUImageTransformFilter extends BaseGPUImageFilter {
-    public static final String TRANSFORM_VERTEX_SHADER = "" +
-            "attribute vec4 position;\n" +
-            " attribute vec4 inputTextureCoordinate;\n" +
-            " \n" +
-            " uniform mat4 transformMatrix;\n" +
-            " uniform mat4 orthographicMatrix;\n" +
-            " \n" +
-            " varying vec2 textureCoordinate;\n" +
-            " \n" +
-            " void main()\n" +
-            " {\n" +
-            "     gl_Position = transformMatrix * vec4(position.xyz, 1.0) * orthographicMatrix;\n" +
-            "     textureCoordinate = inputTextureCoordinate.xy;\n" +
-            " }";
 
     private int transformMatrixUniform;
     private int orthographicMatrixUniform;
@@ -52,7 +40,7 @@ public class GPUImageTransformFilter extends BaseGPUImageFilter {
     private boolean anchorTopLeft;
 
     public GPUImageTransformFilter() {
-        super(TRANSFORM_VERTEX_SHADER, NO_FILTER_FRAGMENT_SHADER);
+        super(R.raw.shader_transform_vert, R.raw.shader_no_filter_frag);
 
         orthographicMatrix = new float[16];
         Matrix.orthoM(orthographicMatrix, 0, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);

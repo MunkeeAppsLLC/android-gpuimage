@@ -62,6 +62,6 @@ public class GPUImageCGAColorspaceFilter extends BaseGPUImageFilter {
             "}\n";
 
     public GPUImageCGAColorspaceFilter() {
-        super(NO_FILTER_VERTEX_SHADER, CGACOLORSPACE_FRAGMENT_SHADER);
+        super(CGACOLORSPACE_FRAGMENT_SHADER);
     }
 }

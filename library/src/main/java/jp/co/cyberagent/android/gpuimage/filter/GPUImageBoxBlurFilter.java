@@ -99,12 +99,7 @@ public class GPUImageBoxBlurFilter extends GPUImageTwoPassTextureSamplingFilter 
      */
     public void setBlurSize(float blurSize) {
         this.blurSize = blurSize;
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initTexelOffsets();
-            }
-        });
+        runOnDraw(() -> initTexelOffsets());
     }
 
     @Override

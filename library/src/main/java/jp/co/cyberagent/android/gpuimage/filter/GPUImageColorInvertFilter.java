@@ -33,6 +33,6 @@ public class GPUImageColorInvertFilter extends BaseGPUImageFilter {
             "}";
 
     public GPUImageColorInvertFilter() {
-        super(NO_FILTER_VERTEX_SHADER, COLOR_INVERT_FRAGMENT_SHADER);
+        super(COLOR_INVERT_FRAGMENT_SHADER);
     }
 }

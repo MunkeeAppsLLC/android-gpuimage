@@ -29,7 +29,7 @@ public class GPUImageSolarizeFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageSolarizeFilter(float threshold) {
-        super(NO_FILTER_VERTEX_SHADER, SOLATIZE_FRAGMENT_SHADER);
+        super(SOLATIZE_FRAGMENT_SHADER);
         this.threshold = threshold;
     }
 

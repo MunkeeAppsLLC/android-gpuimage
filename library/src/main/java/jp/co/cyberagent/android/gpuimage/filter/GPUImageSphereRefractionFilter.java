@@ -60,7 +60,7 @@ public class GPUImageSphereRefractionFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageSphereRefractionFilter(PointF center, float radius, float refractiveIndex) {
-        super(NO_FILTER_VERTEX_SHADER, SPHERE_FRAGMENT_SHADER);
+        super(SPHERE_FRAGMENT_SHADER);
         this.center = center;
         this.radius = radius;
         this.refractiveIndex = refractiveIndex;

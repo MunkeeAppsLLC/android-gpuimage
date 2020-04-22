@@ -18,63 +18,14 @@ package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
-
+import androidx.annotation.NonNull;
+import jp.co.cyberagent.android.gpuimage.R;
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageTwoInputFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+
+import java.nio.FloatBuffer;
 
 public class GPUImage3DLutTableFilter extends BaseGPUImageTwoInputFilter {
-
-    public static final String LOOKUP_FRAGMENT_SHADER =
-            "varying highp vec2 textureCoordinate;\n" +
-                    "varying highp vec2 textureCoordinate2; // TODO: This is not used\n" +
-                    "\n" +
-                    "uniform sampler2D inputImageTexture;\n" +
-                    "uniform sampler2D inputImageTexture2;// lookup texture\n" +
-                    "uniform int isInputImageTexture2Loaded;\n" +
-                    "\n" +
-                    "uniform lowp float intensity;\n" +
-                    "uniform lowp float dimension;\n" +
-                    "\n" +
-                    "highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord,highp float size) {\n" +
-                    "    highp float x = texCoord.x;\n" +
-                    "    highp float y = texCoord.z;\n" +
-                    "    highp float z = texCoord.y;\n" +
-                    "\n" +
-                    "    highp float sliceSize = 1.0 / size;                  // space of 1 slice\n" +
-                    "    highp float sliceTexelSize = sliceSize / size;       // space of 1 pixel\n" +
-                    "    highp float texelsPerSlice = size - 1.0;\n" +
-                    "    highp float sliceInnerSize = sliceTexelSize * texelsPerSlice; // space of size pixels\n" +
-                    "\n" +
-                    "    highp float zSlice0 = floor(z * texelsPerSlice);\n" +
-                    "    highp float zSlice1 = min( zSlice0 + 1.0, texelsPerSlice);\n" +
-                    "\n" +
-                    "    highp float yRange = (y * texelsPerSlice + 0.5) / size;\n" +
-                    "\n" +
-                    "    highp float xOffset = sliceTexelSize * 0.5 + x * sliceInnerSize;\n" +
-                    "\n" +
-                    "    highp float z1 = zSlice1 * sliceSize + xOffset;\n" +
-                    "\n" +
-                    "    #if defined(USE_NEAREST)\n" +
-                    "        return texture2D(tex, vec2( z0, yRange)).bgra;\n" +
-                    "    #else\n" +
-                    "        highp float z0 = zSlice0 * sliceSize + xOffset;\n" +
-                    "        highp vec4 slice0Color = texture2D(tex, vec2(z0, yRange));\n" +
-                    "        highp vec4 slice1Color = texture2D(tex, vec2(z1, yRange));\n" +
-                    "        highp float zOffset = mod(z * texelsPerSlice, 1.0);\n" +
-                    "        return mix(slice0Color, slice1Color, zOffset).bgra;\n" +
-                    "    #endif\n" +
-                    "}\n" +
-                    "\n" +
-                    "\n" +
-                    "void main()\n" +
-                    "{\n" +
-                    "    highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
-                    "    if (isInputImageTexture2Loaded == 0 || textureColor.w == 0.0) {\n" +
-                    "        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);\n" +
-                    "    } else {\n" +
-                    "        highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);\n" +
-                    "        gl_FragColor = vec4(mix(textureColor, newColor, intensity).rgb, textureColor.w);\n" +
-                    "    }\n" +
-                    "}";
 
     private int intensityLocation;
     private int dimensionLocation;
@@ -89,7 +40,7 @@ public class GPUImage3DLutTableFilter extends BaseGPUImageTwoInputFilter {
     }
 
     public GPUImage3DLutTableFilter(final float intensity) {
-        super(LOOKUP_FRAGMENT_SHADER);
+        super(R.raw.shader_3d_lut_input_2d);
         this.intensity = intensity;
     }
 
@@ -104,6 +55,11 @@ public class GPUImage3DLutTableFilter extends BaseGPUImageTwoInputFilter {
     public void onInitialized() {
         super.onInitialized();
         setIntensity(intensity);
+    }
+
+    @Override
+    public void onDraw(int textureId, FloatBuffer cubeBuffer, FloatBuffer textureBuffer) {
+        super.onDraw(textureId, cubeBuffer, textureBuffer);
     }
 
     @Override
@@ -126,6 +82,16 @@ public class GPUImage3DLutTableFilter extends BaseGPUImageTwoInputFilter {
         super.reset(recycleBitmap);
         bitmapId = "";
     }
+
+    @NonNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImage3DLutTableFilter result = new GPUImage3DLutTableFilter(intensity);
+        result.setBitmap(this.getBitmap());
+        result.setIntensity(intensity);
+        return result;
+    }
+
 
     public void computeDimension() {
         if (getBitmap() == null || getBitmap().isRecycled()) {

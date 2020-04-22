@@ -68,7 +68,7 @@ public class GPUImageHighlightShadowFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageHighlightShadowFilter(final float shadows, final float highlights) {
-        super(NO_FILTER_VERTEX_SHADER, HIGHLIGHT_SHADOW_FRAGMENT_SHADER);
+        super(HIGHLIGHT_SHADOW_FRAGMENT_SHADER);
         this.highlights = highlights;
         this.shadows = shadows;
     }

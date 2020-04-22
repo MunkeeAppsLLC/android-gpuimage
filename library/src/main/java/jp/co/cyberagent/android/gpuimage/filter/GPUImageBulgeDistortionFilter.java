@@ -63,7 +63,7 @@ public class GPUImageBulgeDistortionFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageBulgeDistortionFilter(float radius, float scale, PointF center) {
-        super(NO_FILTER_VERTEX_SHADER, BULGE_FRAGMENT_SHADER);
+        super(BULGE_FRAGMENT_SHADER);
         this.radius = radius;
         this.scale = scale;
         this.center = center;

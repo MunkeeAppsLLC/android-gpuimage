@@ -43,7 +43,7 @@ public class GPUImageExposureFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageExposureFilter(final float exposure) {
-        super(NO_FILTER_VERTEX_SHADER, EXPOSURE_FRAGMENT_SHADER);
+        super(EXPOSURE_FRAGMENT_SHADER);
         this.exposure = exposure;
     }
 

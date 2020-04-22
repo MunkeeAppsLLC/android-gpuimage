@@ -25,7 +25,14 @@ import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
+import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
+import jp.co.cyberagent.android.gpuimage.util.Rotation;
+import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -33,15 +40,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
@@ -177,54 +175,44 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
             glRgbBuffer = IntBuffer.allocate(width * height);
         }
         if (runOnDraw.isEmpty()) {
-            runOnDraw(new Runnable() {
-                @Override
-                public void run() {
-                    GPUImageNativeLibrary.YUVtoRBGA(data, width, height, glRgbBuffer.array());
-                    glTextureId = OpenGlUtils.loadTexture(glRgbBuffer, width, height, glTextureId);
+            runOnDraw(() -> {
+                GPUImageNativeLibrary.YUVtoRBGA(data, width, height, glRgbBuffer.array());
+                glTextureId = OpenGlUtils.loadTexture(glRgbBuffer, width, height, glTextureId);
 
-                    if (imageWidth != width) {
-                        imageWidth = width;
-                        imageHeight = height;
-                        adjustImageScaling();
-                    }
+                if (imageWidth != width) {
+                    imageWidth = width;
+                    imageHeight = height;
+                    adjustImageScaling();
                 }
             });
         }
     }
 
     public void setUpSurfaceTexture(final Camera camera) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                int[] textures = new int[1];
-                GLES20.glGenTextures(1, textures, 0);
-                surfaceTexture = new SurfaceTexture(textures[0]);
-                try {
-                    camera.setPreviewTexture(surfaceTexture);
-                    camera.setPreviewCallback(GPUImageRenderer.this);
-                    camera.startPreview();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        runOnDraw(() -> {
+            int[] textures = new int[1];
+            GLES20.glGenTextures(1, textures, 0);
+            surfaceTexture = new SurfaceTexture(textures[0]);
+            try {
+                camera.setPreviewTexture(surfaceTexture);
+                camera.setPreviewCallback(GPUImageRenderer.this);
+                camera.startPreview();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         });
     }
 
     public void setFilter(final GPUImageFilter filter) {
-        runOnDraw(new Runnable() {
-
-            @Override
-            public void run() {
-                final GPUImageFilter oldFilter = GPUImageRenderer.this.filter;
-                GPUImageRenderer.this.filter = filter;
-                if (oldFilter != null) {
-                    oldFilter.destroy();
-                }
-                GPUImageRenderer.this.filter.initIfNeeded();
-                GLES20.glUseProgram(GPUImageRenderer.this.filter.getProgram());
-                GPUImageRenderer.this.filter.onOutputSizeChanged(outputWidth, outputHeight);
+        runOnDraw(() -> {
+            final GPUImageFilter oldFilter = GPUImageRenderer.this.filter;
+            GPUImageRenderer.this.filter = filter;
+            if (oldFilter != null) {
+                oldFilter.destroy();
             }
+            GPUImageRenderer.this.filter.initIfNeeded();
+            GLES20.glUseProgram(GPUImageRenderer.this.filter.getProgram());
+            GPUImageRenderer.this.filter.onOutputSizeChanged(outputWidth, outputHeight);
         });
     }
 
@@ -233,15 +221,11 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
     }
 
     public void deleteImage() {
-        runOnDraw(new Runnable() {
-
-            @Override
-            public void run() {
-                GLES20.glDeleteTextures(1, new int[]{
-                        glTextureId
-                }, 0);
-                glTextureId = NO_IMAGE;
-            }
+        runOnDraw(() -> {
+            GLES20.glDeleteTextures(1, new int[]{
+                    glTextureId
+            }, 0);
+            glTextureId = NO_IMAGE;
         });
     }
 
@@ -254,34 +238,35 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
             return;
         }
 
-        runOnDraw(new Runnable() {
-
-            @Override
-            public void run() {
-                Bitmap resizedBitmap = null;
-                if (bitmap.getWidth() % 2 == 1) {
-                    resizedBitmap = Bitmap.createBitmap(bitmap.getWidth() + 1, bitmap.getHeight(),
-                            Bitmap.Config.ARGB_8888);
-                    Canvas can = new Canvas(resizedBitmap);
-                    can.drawARGB(0x00, 0x00, 0x00, 0x00);
-                    can.drawBitmap(bitmap, 0, 0, null);
-                    addedPadding = 1;
-                } else {
-                    addedPadding = 0;
-                }
-
-                Bitmap finalBitmap = resizedBitmap != null ? resizedBitmap : bitmap;
-                glTextureId = OpenGlUtils.loadTexture(finalBitmap, glTextureId, recycle);
-                if (resizedBitmap != null && !resizedBitmap.isRecycled()) {
-                    resizedBitmap.recycle();
-                }
-                if (recycle && !bitmap.isRecycled()) {
-                    bitmap.recycle();
-                }
-                imageWidth = bitmap.getWidth();
-                imageHeight = bitmap.getHeight();
-                adjustImageScaling();
+        runOnDraw(() -> {
+            Bitmap resizedBitmap = null;
+            if (bitmap.getWidth() % 2 == 1) {
+                resizedBitmap = Bitmap.createBitmap(bitmap.getWidth() + 1, bitmap.getHeight(),
+                        Bitmap.Config.ARGB_8888);
+                Canvas can = new Canvas(resizedBitmap);
+                can.drawARGB(0x00, 0x00, 0x00, 0x00);
+                can.drawBitmap(bitmap, 0, 0, null);
+                addedPadding = 1;
+            } else {
+                addedPadding = 0;
             }
+
+            Bitmap finalBitmap = resizedBitmap != null ? resizedBitmap : bitmap;
+            glTextureId = OpenGlUtils.loadTexture(finalBitmap, glTextureId, recycle);
+            if (resizedBitmap != null && !resizedBitmap.isRecycled()) {
+                resizedBitmap.recycle();
+            }
+            if (recycle && !bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
+            imageWidth = bitmap.getWidth();
+            imageHeight = bitmap.getHeight();
+            adjustImageScaling();
+//            runOnDraw(() -> {
+//                if (onImageLoaded != null) {
+//                    onImageLoaded.run();
+//                }
+//            });
         });
     }
 
@@ -376,7 +361,6 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         }
 
     }
-
 
     private float addDistance(float coordinate, float distance) {
         return coordinate == 0.0f ? distance : 1 - distance;

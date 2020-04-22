@@ -19,15 +19,13 @@ package jp.co.cyberagent.android.gpuimage.filter;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.opengl.GLES20;
+import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
 
 public class GPUImageToneCurveFilter extends BaseGPUImageFilter {
     public static final String TONE_CURVE_FRAGMENT_SHADER = "" +
@@ -60,7 +58,7 @@ public class GPUImageToneCurveFilter extends BaseGPUImageFilter {
 
 
     public GPUImageToneCurveFilter() {
-        super(NO_FILTER_VERTEX_SHADER, TONE_CURVE_FRAGMENT_SHADER);
+        super(TONE_CURVE_FRAGMENT_SHADER);
 
         PointF[] defaultCurvePoints = new PointF[]{new PointF(0.0f, 0.0f), new PointF(0.5f, 0.5f), new PointF(1.0f, 1.0f)};
         rgbCompositeControlPoints = defaultCurvePoints;
@@ -167,24 +165,22 @@ public class GPUImageToneCurveFilter extends BaseGPUImageFilter {
     }
 
     private void updateToneCurveTexture() {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, toneCurveTexture[0]);
+        runOnDraw(() -> {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, toneCurveTexture[0]);
 
-                if ((redCurve.size() >= 256) && (greenCurve.size() >= 256) && (blueCurve.size() >= 256) && (rgbCompositeCurve.size() >= 256)) {
-                    byte[] toneCurveByteArray = new byte[256 * 4];
-                    for (int currentCurveIndex = 0; currentCurveIndex < 256; currentCurveIndex++) {
-                        // BGRA for upload to texture
-                        toneCurveByteArray[currentCurveIndex * 4 + 2] = (byte) ((int) Math.min(Math.max(currentCurveIndex + blueCurve.get(currentCurveIndex) + rgbCompositeCurve.get(currentCurveIndex), 0), 255) & 0xff);
-                        toneCurveByteArray[currentCurveIndex * 4 + 1] = (byte) ((int) Math.min(Math.max(currentCurveIndex + greenCurve.get(currentCurveIndex) + rgbCompositeCurve.get(currentCurveIndex), 0), 255) & 0xff);
-                        toneCurveByteArray[currentCurveIndex * 4] = (byte) ((int) Math.min(Math.max(currentCurveIndex + redCurve.get(currentCurveIndex) + rgbCompositeCurve.get(currentCurveIndex), 0), 255) & 0xff);
-                        toneCurveByteArray[currentCurveIndex * 4 + 3] = (byte) (0xff);
-                    }
-
-                    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, 256 /*width*/, 1 /*height*/, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, ByteBuffer.wrap(toneCurveByteArray));
+            if ((redCurve.size() >= 256) && (greenCurve.size() >= 256) && (blueCurve.size() >= 256) && (rgbCompositeCurve.size() >= 256)) {
+                byte[] toneCurveByteArray = new byte[256 * 4];
+                for (int currentCurveIndex = 0; currentCurveIndex < 256; currentCurveIndex++) {
+                    // BGRA for upload to texture
+                    toneCurveByteArray[currentCurveIndex * 4 + 2] = (byte) ((int) Math.min(Math.max(currentCurveIndex + blueCurve.get(currentCurveIndex) + rgbCompositeCurve.get(currentCurveIndex), 0), 255) & 0xff);
+                    toneCurveByteArray[currentCurveIndex * 4 + 1] = (byte) ((int) Math.min(Math.max(currentCurveIndex + greenCurve.get(currentCurveIndex) + rgbCompositeCurve.get(currentCurveIndex), 0), 255) & 0xff);
+                    toneCurveByteArray[currentCurveIndex * 4] = (byte) ((int) Math.min(Math.max(currentCurveIndex + redCurve.get(currentCurveIndex) + rgbCompositeCurve.get(currentCurveIndex), 0), 255) & 0xff);
+                    toneCurveByteArray[currentCurveIndex * 4 + 3] = (byte) (0xff);
                 }
+
+                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, 256 /*width*/, 1 /*height*/, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, ByteBuffer.wrap(toneCurveByteArray));
+            }
 //        Buffer pixels!
 //        GLES20.glTexImage2D(int target,
 //            int level,
@@ -195,7 +191,6 @@ public class GPUImageToneCurveFilter extends BaseGPUImageFilter {
 //            int format,
 //            int type,
 //            java.nio.Buffer pixels);
-            }
         });
     }
 
@@ -206,16 +201,13 @@ public class GPUImageToneCurveFilter extends BaseGPUImageFilter {
 
         // Sort the array
         PointF[] pointsSorted = points.clone();
-        Arrays.sort(pointsSorted, new Comparator<PointF>() {
-            @Override
-            public int compare(PointF point1, PointF point2) {
-                if (point1.x < point2.x) {
-                    return -1;
-                } else if (point1.x > point2.x) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+        Arrays.sort(pointsSorted, (point1, point2) -> {
+            if (point1.x < point2.x) {
+                return -1;
+            } else if (point1.x > point2.x) {
+                return 1;
+            } else {
+                return 0;
             }
         });
 

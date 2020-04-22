@@ -17,6 +17,8 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
 
+import org.jetbrains.annotations.NotNull;
+
 public class GPUImageDirectionalSobelEdgeDetectionFilter extends GPUImage3x3TextureSamplingFilter {
     public static final String DIRECTIONAL_SOBEL_EDGE_DETECTION_FRAGMENT_SHADER = "" +
             "precision mediump float;\n" +
@@ -60,5 +62,13 @@ public class GPUImageDirectionalSobelEdgeDetectionFilter extends GPUImage3x3Text
 
     public GPUImageDirectionalSobelEdgeDetectionFilter() {
         super(DIRECTIONAL_SOBEL_EDGE_DETECTION_FRAGMENT_SHADER);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImageSobelEdgeDetectionFilter result = new GPUImageSobelEdgeDetectionFilter();
+        result.setLineSize(getLineSize());
+        return result;
     }
 }

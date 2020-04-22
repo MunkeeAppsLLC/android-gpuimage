@@ -37,7 +37,7 @@ public class GPUImageHalftoneFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageHalftoneFilter(float fractionalWidthOfAPixel) {
-        super(NO_FILTER_VERTEX_SHADER, HALFTONE_FRAGMENT_SHADER);
+        super(HALFTONE_FRAGMENT_SHADER);
         this.fractionalWidthOfAPixel = fractionalWidthOfAPixel;
     }
 

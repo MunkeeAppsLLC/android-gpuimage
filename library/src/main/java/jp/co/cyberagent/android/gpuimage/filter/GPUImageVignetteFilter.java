@@ -64,7 +64,7 @@ public class GPUImageVignetteFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageVignetteFilter(final PointF vignetteCenter, final float[] vignetteColor, final float vignetteStart, final float vignetteEnd) {
-        super(NO_FILTER_VERTEX_SHADER, VIGNETTING_FRAGMENT_SHADER);
+        super(VIGNETTING_FRAGMENT_SHADER);
         this.vignetteCenter = vignetteCenter;
         this.vignetteColor = vignetteColor;
         this.vignetteStart = vignetteStart;

@@ -77,7 +77,7 @@ public class GPUImageCrosshatchFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageCrosshatchFilter(float crossHatchSpacing, float lineWidth) {
-        super(NO_FILTER_VERTEX_SHADER, CROSSHATCH_FRAGMENT_SHADER);
+        super(CROSSHATCH_FRAGMENT_SHADER);
         this.crossHatchSpacing = crossHatchSpacing;
         this.lineWidth = lineWidth;
     }

@@ -150,7 +150,7 @@ public class GPUImageColorBalanceFilter extends BaseGPUImageFilter {
 
 
     public GPUImageColorBalanceFilter() {
-        super(NO_FILTER_VERTEX_SHADER, GPU_IMAGE_COLOR_BALANCE_FRAGMENT_SHADER);
+        super(GPU_IMAGE_COLOR_BALANCE_FRAGMENT_SHADER);
         this.showdows = new float[]{0.0f, 0.0f, 0.0f};
         this.midtones = new float[]{0.0f, 0.0f, 0.0f};
         this.highlights = new float[]{0.0f, 0.0f, 0.0f};

@@ -25,11 +25,7 @@ import android.hardware.Camera;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.*;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -37,14 +33,13 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.concurrent.Semaphore;
-
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
 import static jp.co.cyberagent.android.gpuimage.GPUImage.SURFACE_TYPE_TEXTURE_VIEW;
 
@@ -369,48 +364,32 @@ public class GPUImageView extends FrameLayout {
             }
         });
 
-        post(new Runnable() {
-            @Override
-            public void run() {
-                // Optionally, show loading view:
-                if (isShowLoading) {
-                    addView(new LoadingView(getContext()));
-                }
-                // Request layout to release waiter:
-                surfaceView.requestLayout();
+        post(() -> {
+            // Optionally, show loading view:
+            if (isShowLoading) {
+                addView(new LoadingView(getContext()));
             }
+            // Request layout to release waiter:
+            surfaceView.requestLayout();
         });
 
         waiter.acquire();
 
         // Run one render pass
-        gpuImage.runOnGLThread(new Runnable() {
-            @Override
-            public void run() {
-                waiter.release();
-            }
-        });
+        gpuImage.runOnGLThread(() -> waiter.release());
         requestRender();
         waiter.acquire();
         Bitmap bitmap = capture();
 
 
         forceSize = null;
-        post(new Runnable() {
-            @Override
-            public void run() {
-                surfaceView.requestLayout();
-            }
-        });
+        post(() -> surfaceView.requestLayout());
         requestRender();
 
         if (isShowLoading) {
-            postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // Remove loading view
-                    removeViewAt(1);
-                }
+            postDelayed(() -> {
+                // Remove loading view
+                removeViewAt(1);
             }, 300);
         }
 
@@ -431,12 +410,9 @@ public class GPUImageView extends FrameLayout {
 
         // Take picture on OpenGL thread
         final Bitmap resultBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        gpuImage.runOnGLThread(new Runnable() {
-            @Override
-            public void run() {
-                GPUImageNativeLibrary.adjustBitmap(resultBitmap);
-                waiter.release();
-            }
+        gpuImage.runOnGLThread(() -> {
+            GPUImageNativeLibrary.adjustBitmap(resultBitmap);
+            waiter.release();
         });
         requestRender();
         waiter.acquire();
@@ -556,6 +532,42 @@ public class GPUImageView extends FrameLayout {
         }
     }
 
+    public int getDisplayWidth() {
+        return surfaceView.getWidth();
+    }
+
+    public interface OnPictureSavedListener {
+        void onPictureSaved(Uri uri);
+    }
+
+    public int getImageWidth() {
+        return getGPUImage().getImageWidth();
+    }
+
+    public int getImageHeight() {
+        return getGPUImage().getImageHeight();
+    }
+
+    public int getDisplayHeight() {
+        return surfaceView.getHeight();
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, boolean recycle) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap, recycle);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height, boolean recycle) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height, recycle);
+    }
+
     private class SaveTask extends AsyncTask<Void, Void, Void> {
         private final String folderName;
         private final String fileName;
@@ -600,18 +612,9 @@ public class GPUImageView extends FrameLayout {
                         new String[]{
                                 file.toString()
                         }, null,
-                        new MediaScannerConnection.OnScanCompletedListener() {
-                            @Override
-                            public void onScanCompleted(final String path, final Uri uri) {
-                                if (listener != null) {
-                                    handler.post(new Runnable() {
-
-                                        @Override
-                                        public void run() {
-                                            listener.onPictureSaved(uri);
-                                        }
-                                    });
-                                }
+                        (path1, uri) -> {
+                            if (listener != null) {
+                                handler.post(() -> listener.onPictureSaved(uri));
                             }
                         });
             } catch (FileNotFoundException e) {

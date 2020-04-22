@@ -122,7 +122,7 @@ public class GPUImagePerlinNoiseFilter extends BaseGPUImageFilter {
 
     public GPUImagePerlinNoiseFilter(float scale, float noiseLevel, float opacity,
                                      float[] startColor, float[] endColor) {
-        super(NO_FILTER_VERTEX_SHADER, PERLIN_NOISE_FRAGMENT_SHADER);
+        super(PERLIN_NOISE_FRAGMENT_SHADER);
         this.scale = scale;
         this.noiseLevel = noiseLevel;
         this.opacity = opacity;

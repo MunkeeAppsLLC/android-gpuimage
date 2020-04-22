@@ -72,7 +72,7 @@ public class GPUImageHueFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageHueFilter(final float hue) {
-        super(NO_FILTER_VERTEX_SHADER, HUE_FRAGMENT_SHADER);
+        super(HUE_FRAGMENT_SHADER);
         this.hue = hue;
     }
 

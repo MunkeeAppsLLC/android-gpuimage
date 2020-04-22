@@ -48,7 +48,7 @@ public class GPUImagePixelationFilter extends BaseGPUImageFilter {
     private int pixelLocation;
 
     public GPUImagePixelationFilter() {
-        super(NO_FILTER_VERTEX_SHADER, PIXELATION_FRAGMENT_SHADER);
+        super(PIXELATION_FRAGMENT_SHADER);
         pixel = 1.0f;
     }
 

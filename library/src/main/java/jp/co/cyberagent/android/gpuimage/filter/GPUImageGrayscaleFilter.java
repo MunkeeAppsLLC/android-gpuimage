@@ -16,6 +16,8 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Applies a grayscale effect to the image.
  */
@@ -38,6 +40,12 @@ public class GPUImageGrayscaleFilter extends BaseGPUImageFilter {
             "}";
 
     public GPUImageGrayscaleFilter() {
-        super(NO_FILTER_VERTEX_SHADER, GRAYSCALE_FRAGMENT_SHADER);
+        super(GRAYSCALE_FRAGMENT_SHADER);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageGrayscaleFilter();
     }
 }

@@ -24,6 +24,7 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.util.Log;
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
 
 import java.nio.IntBuffer;
 
@@ -77,7 +78,7 @@ public class OpenGlUtils {
     /**
      *
      * Use this method in collaboration with
-     * {@link jp.co.cyberagent.android.gpuimage.filter.GPUImage3DSamplerInputFilter} to be able to
+     * {@link BaseGPUImage3DSamplerInputFilter} to be able to
      * load 3D textures and use {@code sampler3D} data structure in your shaders.
      * Make sure to set the GLES version to 3 in
      * {@link jp.co.cyberagent.android.gpuimage.GPUImage#setGLSurfaceView(GLSurfaceView)}

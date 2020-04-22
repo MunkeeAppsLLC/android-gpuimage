@@ -43,7 +43,7 @@ public class GPUImageBrightnessFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageBrightnessFilter(final float brightness) {
-        super(NO_FILTER_VERTEX_SHADER, BRIGHTNESS_FRAGMENT_SHADER);
+        super(BRIGHTNESS_FRAGMENT_SHADER);
         this.brightness = brightness;
     }
 

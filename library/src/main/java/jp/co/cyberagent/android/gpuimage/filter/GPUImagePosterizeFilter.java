@@ -45,7 +45,7 @@ public class GPUImagePosterizeFilter extends BaseGPUImageFilter {
     }
 
     public GPUImagePosterizeFilter(final int colorLevels) {
-        super(GPUImageFilter.NO_FILTER_VERTEX_SHADER, POSTERIZE_FRAGMENT_SHADER);
+        super(POSTERIZE_FRAGMENT_SHADER);
         this.colorLevels = colorLevels;
     }
 

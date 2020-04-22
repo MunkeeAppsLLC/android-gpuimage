@@ -43,7 +43,7 @@ public class GPUImageLevelsFilter extends BaseGPUImageFilter {
     }
 
     private GPUImageLevelsFilter(final float[] min, final float[] mid, final float[] max, final float[] minOUt, final float[] maxOut) {
-        super(NO_FILTER_VERTEX_SHADER, LEVELS_FRAGMET_SHADER);
+        super(LEVELS_FRAGMET_SHADER);
 
         this.min = min;
         this.mid = mid;

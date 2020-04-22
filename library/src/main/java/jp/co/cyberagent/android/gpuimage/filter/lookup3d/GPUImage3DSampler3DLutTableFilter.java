@@ -17,33 +17,12 @@
 package jp.co.cyberagent.android.gpuimage.filter.lookup3d;
 
 import android.opengl.GLES20;
-
+import jp.co.cyberagent.android.gpuimage.R;
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import org.jetbrains.annotations.NotNull;
 
 public class GPUImage3DSampler3DLutTableFilter extends BaseGPUImage3DSamplerInputFilter {
-
-    public static final String LOOKUP_FRAGMENT_SHADER =
-            "#extension GL_OES_texture_3D : enable\n" +
-                    "\n" +
-                    "precision highp float;\n" +
-                    "\n" +
-                    "varying highp vec2 textureCoordinate;\n" +
-                    "varying highp vec3 textureCoordinate2;\n" +
-                    "uniform sampler2D inputImageTexture;\n" +
-                    "uniform int isInputImageTexture2Loaded;\n" +
-                    "uniform lowp float intensity;\n" +
-                    "\n" +
-                    "uniform sampler3D inputImageTexture2;\n" +
-                    "void main() {\n" +
-                    "    vec4 textureColor= texture2D(inputImageTexture, textureCoordinate);\n" +
-                    "    if(isInputImageTexture2Loaded == 0) {\n" +
-                    "        gl_FragColor = textureColor;    \n" +
-                    "    } else {\n" +
-                    "        vec4 newColor = texture3D(inputImageTexture2, textureColor.rgb);\n" +
-                    "        gl_FragColor = mix(textureColor, newColor, intensity);\n" +
-                    "    }\n" +
-                    "    \n" +
-                    "}";
 
     private int intensityLocation;
 
@@ -54,7 +33,7 @@ public class GPUImage3DSampler3DLutTableFilter extends BaseGPUImage3DSamplerInpu
     }
 
     public GPUImage3DSampler3DLutTableFilter(final float intensity) {
-        super(LOOKUP_FRAGMENT_SHADER);
+        super(R.raw.shader_3d_lut_input_3d);
         this.intensity = intensity;
     }
 
@@ -68,6 +47,15 @@ public class GPUImage3DSampler3DLutTableFilter extends BaseGPUImage3DSamplerInpu
     public void onInitialized() {
         super.onInitialized();
         setIntensity(intensity);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImage3DSampler3DLutTableFilter result = new GPUImage3DSampler3DLutTableFilter();
+        result.setTexture(getTexture());
+        result.setIntensity(intensity);
+        return result;
     }
 
     public void setIntensity(final float intensity) {

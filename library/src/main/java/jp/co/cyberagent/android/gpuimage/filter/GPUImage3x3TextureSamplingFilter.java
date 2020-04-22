@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
+import org.jetbrains.annotations.NotNull;
 
 public class GPUImage3x3TextureSamplingFilter extends BaseGPUImageFilter {
     public static final String THREE_X_THREE_TEXTURE_SAMPLING_VERTEX_SHADER = "" +
@@ -68,10 +69,6 @@ public class GPUImage3x3TextureSamplingFilter extends BaseGPUImageFilter {
     private float texelHeight;
     private float lineSize = 1.0f;
 
-    public GPUImage3x3TextureSamplingFilter() {
-        this(NO_FILTER_VERTEX_SHADER);
-    }
-
     public GPUImage3x3TextureSamplingFilter(final String fragmentShader) {
         super(THREE_X_THREE_TEXTURE_SAMPLING_VERTEX_SHADER, fragmentShader);
     }
@@ -118,8 +115,30 @@ public class GPUImage3x3TextureSamplingFilter extends BaseGPUImageFilter {
         updateTexelValues();
     }
 
+    public float getTexelWidth() {
+        return texelWidth;
+    }
+
+    public float getTexelHeight() {
+        return texelHeight;
+    }
+
+    public float getLineSize() {
+        return lineSize;
+    }
+
     private void updateTexelValues() {
         setFloat(uniformTexelWidthLocation, texelWidth);
         setFloat(uniformTexelHeightLocation, texelHeight);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImage3x3TextureSamplingFilter result = new GPUImage3x3TextureSamplingFilter(fragmentShader);
+        result.setLineSize(lineSize);
+        result.setTexelHeight(texelHeight);
+        result.setTexelWidth(texelWidth);
+        return result;
     }
 }

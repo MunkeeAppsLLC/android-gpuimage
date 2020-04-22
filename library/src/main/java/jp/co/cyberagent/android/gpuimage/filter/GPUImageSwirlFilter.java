@@ -63,7 +63,7 @@ public class GPUImageSwirlFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageSwirlFilter(float radius, float angle, PointF center) {
-        super(NO_FILTER_VERTEX_SHADER, SWIRL_FRAGMENT_SHADER);
+        super(SWIRL_FRAGMENT_SHADER);
         this.radius = radius;
         this.angle = angle;
         this.center = center;

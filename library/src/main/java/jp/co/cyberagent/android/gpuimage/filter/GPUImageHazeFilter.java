@@ -56,7 +56,7 @@ public class GPUImageHazeFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageHazeFilter(float distance, float slope) {
-        super(NO_FILTER_VERTEX_SHADER, HAZE_FRAGMENT_SHADER);
+        super(HAZE_FRAGMENT_SHADER);
         this.distance = distance;
         this.slope = slope;
     }

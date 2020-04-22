@@ -16,23 +16,24 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
-import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.PointF;
 import android.opengl.GLES20;
+import android.view.View;
+import androidx.annotation.RawRes;
+import jp.co.cyberagent.android.gpuimage.R;
+import jp.co.cyberagent.android.gpuimage.util.FilterUtils;
+import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils;
-
 public abstract class BaseGPUImageFilter implements GPUImageFilter {
 
     private final Queue<Runnable> runOnDraw;
-    private final String vertexShader;
-    private final String fragmentShader;
+    protected final String vertexShader;
+    protected final String fragmentShader;
 
     private int glProgId;
     private int glAttribPosition;
@@ -43,13 +44,43 @@ public abstract class BaseGPUImageFilter implements GPUImageFilter {
     private boolean isInitialized;
 
     public BaseGPUImageFilter() {
-        this(NO_FILTER_VERTEX_SHADER, NO_FILTER_FRAGMENT_SHADER);
+        this(R.raw.shader_no_filter_vert, R.raw.shader_no_filter_frag);
+    }
+
+    public BaseGPUImageFilter(@RawRes int fragmentShaderResId) {
+        this(R.raw.shader_no_filter_vert, fragmentShaderResId);
+    }
+
+    public BaseGPUImageFilter(String fragmentShader) {
+        this(null, fragmentShader, R.raw.shader_no_filter_vert, View.NO_ID);
     }
 
     public BaseGPUImageFilter(final String vertexShader, final String fragmentShader) {
+        this(vertexShader, fragmentShader, View.NO_ID, View.NO_ID);
+    }
+
+    public BaseGPUImageFilter(@RawRes final int vertexShaderResId,
+                              @RawRes final int fragmentShaderResId) {
+        this(null, null, vertexShaderResId, fragmentShaderResId);
+    }
+
+    private BaseGPUImageFilter(final String vertexShader,
+                               final String fragmentShader,
+                               @RawRes final int vertexShaderResId,
+                               @RawRes final int fragmentShaderResId) {
         this.runOnDraw = new ConcurrentLinkedQueue<>();
-        this.vertexShader = vertexShader;
-        this.fragmentShader = fragmentShader;
+        if (vertexShader == null) {
+            assert (vertexShaderResId == View.NO_ID) : "vertexShader == null && vertexShaderResId not set";
+            this.vertexShader = FilterUtils.loadShader(vertexShaderResId);
+        } else {
+            this.vertexShader = vertexShader;
+        }
+        if (fragmentShader == null) {
+            assert (fragmentShaderResId == View.NO_ID) : "fragmentShader == null && fragmentShaderResId not set";
+            this.fragmentShader = FilterUtils.loadShader(fragmentShaderResId);
+        } else {
+            this.fragmentShader = fragmentShader;
+        }
     }
 
     private final void init() {
@@ -168,105 +199,76 @@ public abstract class BaseGPUImageFilter implements GPUImageFilter {
 
     @Override
     public void setInteger(final int location, final int intValue) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniform1i(location, intValue);
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniform1i(location, intValue);
         });
     }
 
     @Override
     public void setFloat(final int location, final float floatValue) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniform1f(location, floatValue);
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniform1f(location, floatValue);
         });
     }
 
     @Override
     public void setFloatVec2(final int location, final float[] arrayValue) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniform2fv(location, 1, FloatBuffer.wrap(arrayValue));
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniform2fv(location, 1, FloatBuffer.wrap(arrayValue));
         });
     }
 
     @Override
     public void setFloatVec3(final int location, final float[] arrayValue) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniform3fv(location, 1, FloatBuffer.wrap(arrayValue));
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniform3fv(location, 1, FloatBuffer.wrap(arrayValue));
         });
     }
 
     @Override
     public void setFloatVec4(final int location, final float[] arrayValue) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniform4fv(location, 1, FloatBuffer.wrap(arrayValue));
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniform4fv(location, 1, FloatBuffer.wrap(arrayValue));
         });
     }
 
     @Override
     public void setFloatArray(final int location, final float[] arrayValue) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniform1fv(location, arrayValue.length, FloatBuffer.wrap(arrayValue));
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniform1fv(location, arrayValue.length, FloatBuffer.wrap(arrayValue));
         });
     }
 
     @Override
     public void setPoint(final int location, final PointF point) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initIfNeeded();
-                float[] vec2 = new float[2];
-                vec2[0] = point.x;
-                vec2[1] = point.y;
-                GLES20.glUniform2fv(location, 1, vec2, 0);
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            float[] vec2 = new float[2];
+            vec2[0] = point.x;
+            vec2[1] = point.y;
+            GLES20.glUniform2fv(location, 1, vec2, 0);
         });
     }
 
     @Override
     public void setUniformMatrix3f(final int location, final float[] matrix) {
-        runOnDraw(new Runnable() {
-
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniformMatrix3fv(location, 1, false, matrix, 0);
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniformMatrix3fv(location, 1, false, matrix, 0);
         });
     }
 
     @Override
     public void setUniformMatrix4f(final int location, final float[] matrix) {
-        runOnDraw(new Runnable() {
-
-            @Override
-            public void run() {
-                initIfNeeded();
-                GLES20.glUniformMatrix4fv(location, 1, false, matrix, 0);
-            }
+        runOnDraw(() -> {
+            initIfNeeded();
+            GLES20.glUniformMatrix4fv(location, 1, false, matrix, 0);
         });
     }
 
@@ -277,24 +279,10 @@ public abstract class BaseGPUImageFilter implements GPUImageFilter {
         }
     }
 
-    public static String loadShader(String file, Context context) {
-        try {
-            AssetManager assetManager = context.getAssets();
-            InputStream ims = assetManager.open(file);
-
-            String re = convertStreamToString(ims);
-            ims.close();
-            return re;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return "";
-    }
-
-    public static String convertStreamToString(java.io.InputStream is) {
-        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : "";
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageIdentityFilter();
     }
 
 }

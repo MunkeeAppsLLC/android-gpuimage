@@ -45,7 +45,7 @@ public class GPUImageLuminanceThresholdFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageLuminanceThresholdFilter(float threshold) {
-        super(NO_FILTER_VERTEX_SHADER, LUMINANCE_THRESHOLD_FRAGMENT_SHADER);
+        super(LUMINANCE_THRESHOLD_FRAGMENT_SHADER);
         this.threshold = threshold;
     }
 

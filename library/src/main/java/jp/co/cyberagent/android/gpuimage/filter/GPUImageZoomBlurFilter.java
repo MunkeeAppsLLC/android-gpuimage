@@ -40,7 +40,7 @@ public class GPUImageZoomBlurFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageZoomBlurFilter(PointF blurCenter, float blurSize) {
-        super(NO_FILTER_VERTEX_SHADER, ZOOM_BLUR_FRAGMENT_SHADER);
+        super(ZOOM_BLUR_FRAGMENT_SHADER);
         this.blurCenter = blurCenter;
         this.blurSize = blurSize;
     }

@@ -65,7 +65,7 @@ public class GPUImageMonochromeFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageMonochromeFilter(final float intensity, final float[] color) {
-        super(NO_FILTER_VERTEX_SHADER, MONOCHROME_FRAGMENT_SHADER);
+        super(MONOCHROME_FRAGMENT_SHADER);
         this.intensity = intensity;
         this.color = color;
     }

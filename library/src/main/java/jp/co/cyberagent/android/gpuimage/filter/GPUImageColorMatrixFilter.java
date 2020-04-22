@@ -53,7 +53,7 @@ public class GPUImageColorMatrixFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageColorMatrixFilter(final float intensity, final float[] colorMatrix) {
-        super(NO_FILTER_VERTEX_SHADER, COLOR_MATRIX_FRAGMENT_SHADER);
+        super(COLOR_MATRIX_FRAGMENT_SHADER);
         this.intensity = intensity;
         this.colorMatrix = colorMatrix;
     }

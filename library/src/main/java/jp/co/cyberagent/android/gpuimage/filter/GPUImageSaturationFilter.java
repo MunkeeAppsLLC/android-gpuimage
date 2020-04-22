@@ -49,7 +49,7 @@ public class GPUImageSaturationFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageSaturationFilter(final float saturation) {
-        super(NO_FILTER_VERTEX_SHADER, SATURATION_FRAGMENT_SHADER);
+        super(SATURATION_FRAGMENT_SHADER);
         this.saturation = saturation;
     }
 

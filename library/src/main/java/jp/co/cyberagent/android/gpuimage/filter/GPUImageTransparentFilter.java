@@ -22,6 +22,6 @@ public class GPUImageTransparentFilter extends BaseGPUImageFilter {
     private int intensityLocation;
 
     public GPUImageTransparentFilter() {
-        super(NO_FILTER_VERTEX_SHADER, TRANSPARENT_FILTER_FRAGMENT_SHADER);
+        super(TRANSPARENT_FILTER_FRAGMENT_SHADER);
     }
 }

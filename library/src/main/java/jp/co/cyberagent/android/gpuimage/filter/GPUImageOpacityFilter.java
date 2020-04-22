@@ -44,7 +44,7 @@ public class GPUImageOpacityFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageOpacityFilter(final float opacity) {
-        super(NO_FILTER_VERTEX_SHADER, OPACITY_FRAGMENT_SHADER);
+        super(OPACITY_FRAGMENT_SHADER);
         this.opacity = opacity;
     }
 

@@ -52,7 +52,7 @@ public class GPUImageRGBFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageRGBFilter(final float red, final float green, final float blue) {
-        super(NO_FILTER_VERTEX_SHADER, RGB_FRAGMENT_SHADER);
+        super(RGB_FRAGMENT_SHADER);
         this.red = red;
         this.green = green;
         this.blue = blue;

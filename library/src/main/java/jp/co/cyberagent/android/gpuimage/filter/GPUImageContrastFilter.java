@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Changes the contrast of the image.<br>
@@ -45,7 +46,7 @@ public class GPUImageContrastFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageContrastFilter(float contrast) {
-        super(NO_FILTER_VERTEX_SHADER, CONTRAST_FRAGMENT_SHADER);
+        super(CONTRAST_FRAGMENT_SHADER);
         this.contrast = contrast;
     }
 
@@ -68,5 +69,13 @@ public class GPUImageContrastFilter extends BaseGPUImageFilter {
 
     public float getContrast() {
         return contrast;
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        GPUImageContrastFilter result = new GPUImageContrastFilter();
+        result.setContrast(contrast);
+        return result;
     }
 }

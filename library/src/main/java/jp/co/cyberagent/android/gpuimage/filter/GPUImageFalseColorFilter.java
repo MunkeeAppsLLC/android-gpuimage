@@ -53,7 +53,7 @@ public class GPUImageFalseColorFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageFalseColorFilter(float[] firstColor, float[] secondColor) {
-        super(NO_FILTER_VERTEX_SHADER, FALSECOLOR_FRAGMENT_SHADER);
+        super(FALSECOLOR_FRAGMENT_SHADER);
         this.firstColor = firstColor;
         this.secondColor = secondColor;
     }

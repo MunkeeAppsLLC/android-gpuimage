@@ -32,7 +32,7 @@ public class GPUImageVibranceFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageVibranceFilter(float vibrance) {
-        super(NO_FILTER_VERTEX_SHADER, VIBRANCE_FRAGMENT_SHADER);
+        super(VIBRANCE_FRAGMENT_SHADER);
         this.vibrance = vibrance;
     }
 

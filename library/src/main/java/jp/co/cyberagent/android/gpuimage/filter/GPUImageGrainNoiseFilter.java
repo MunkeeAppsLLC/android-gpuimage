@@ -159,7 +159,7 @@ public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
     }
 
     public GPUImageGrainNoiseFilter(float time, float scale, float grainAmont, float grainSize) {
-        super(NO_FILTER_VERTEX_SHADER, GRAIN_NOISE_FRAGMENT_SHADER);
+        super(GRAIN_NOISE_FRAGMENT_SHADER);
         this.time = time;
         this.scale = scale;
         this.grainAmount = grainAmont;
