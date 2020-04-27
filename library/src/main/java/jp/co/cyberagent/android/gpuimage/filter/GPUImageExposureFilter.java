@@ -18,6 +18,8 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * exposure: The adjusted exposure (-10.0 - 10.0, with 0.0 as the default)
  */
@@ -66,5 +68,11 @@ public class GPUImageExposureFilter extends BaseGPUImageFilter {
     public void setExposure(final float exposure) {
         this.exposure = exposure;
         setFloat(exposureLocation, this.exposure);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageExposureFilter(exposure);
     }
 }

@@ -18,6 +18,8 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Adjusts the white balance of incoming image. <br>
  * <br>
@@ -98,5 +100,11 @@ public class GPUImageWhiteBalanceFilter extends BaseGPUImageFilter {
     public void setTint(final float tint) {
         this.tint = tint;
         setFloat(tintLocation, (float) (this.tint / 100.0));
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageWhiteBalanceFilter(temperature, tint);
     }
 }

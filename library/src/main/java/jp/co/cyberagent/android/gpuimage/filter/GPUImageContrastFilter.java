@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -74,8 +75,6 @@ public class GPUImageContrastFilter extends BaseGPUImageFilter {
     @NotNull
     @Override
     public GPUImageFilter copy() {
-        GPUImageContrastFilter result = new GPUImageContrastFilter();
-        result.setContrast(contrast);
-        return result;
+        return new GPUImageContrastFilter(contrast);
     }
 }

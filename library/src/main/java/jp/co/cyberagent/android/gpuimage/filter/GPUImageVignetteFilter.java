@@ -19,6 +19,8 @@ package jp.co.cyberagent.android.gpuimage.filter;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Performs a vignetting effect, fading out the image at the edges
  * x:
@@ -124,5 +126,11 @@ public class GPUImageVignetteFilter extends BaseGPUImageFilter {
     public void setVignetteEnd(final float vignetteEnd) {
         this.vignetteEnd = vignetteEnd;
         setFloat(vignetteEndLocation, this.vignetteEnd);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageVignetteFilter(vignetteCenter, vignetteColor, vignetteStart, vignetteEnd);
     }
 }

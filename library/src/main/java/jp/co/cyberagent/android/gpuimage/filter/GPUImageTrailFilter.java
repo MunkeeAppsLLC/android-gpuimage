@@ -54,7 +54,7 @@ public class GPUImageTrailFilter extends GPUImageFilterGroup {
     }
 
     @Override
-    public void addFilter(GPUImageFilter aFilter) {
+    public GPUImageFilter addFilter(GPUImageFilter aFilter) {
         throw new UnsupportedOperationException();
     }
 

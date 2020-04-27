@@ -24,9 +24,10 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.util.Log;
-import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
 
 import java.nio.IntBuffer;
+
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
 
 public class OpenGlUtils {
     public static final int NO_TEXTURE = -1;
@@ -46,8 +47,8 @@ public class OpenGlUtils {
             GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_LINEAR);
 
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
         } else {

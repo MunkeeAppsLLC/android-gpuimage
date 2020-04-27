@@ -2,6 +2,8 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
+import org.jetbrains.annotations.NotNull;
+
 public class GPUImageVibranceFilter extends BaseGPUImageFilter {
     public static final String VIBRANCE_FRAGMENT_SHADER = "" +
             "varying highp vec2 textureCoordinate;\n" +
@@ -51,6 +53,12 @@ public class GPUImageVibranceFilter extends BaseGPUImageFilter {
         if (isInitialized()) {
             setFloat(vibranceLocation, vibrance);
         }
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageVibranceFilter(vibrance);
     }
 }
 

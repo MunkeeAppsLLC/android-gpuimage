@@ -16,13 +16,25 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
+import androidx.annotation.RawRes;
+
 public class GPUImageTwoPassFilter extends GPUImageFilterGroup {
+
+    protected final GPUImageFilter firstPassFilter;
+    protected final GPUImageFilter secondPassFilter;
+
+    public GPUImageTwoPassFilter(@RawRes int firstVertexShader, @RawRes int firstFragmentShader,
+                                 @RawRes int secondVertexShader, @RawRes int secondFragmentShader) {
+        super();
+        this.firstPassFilter = addFilter(new GPUImageIdentityFilter(firstVertexShader, firstFragmentShader));
+        this.secondPassFilter = addFilter(new GPUImageIdentityFilter(secondVertexShader, secondFragmentShader));
+    }
+
     public GPUImageTwoPassFilter(String firstVertexShader, String firstFragmentShader,
                                  String secondVertexShader, String secondFragmentShader) {
         super();
-        addFilter(new BaseGPUImageFilter(firstVertexShader, firstFragmentShader) {
-        });
-        addFilter(new BaseGPUImageFilter(secondVertexShader, secondFragmentShader) {
-        });
+        this.firstPassFilter = addFilter(new GPUImageIdentityFilter(firstVertexShader, firstFragmentShader));
+        this.secondPassFilter = addFilter(new GPUImageIdentityFilter(secondVertexShader, secondFragmentShader));
     }
+
 }

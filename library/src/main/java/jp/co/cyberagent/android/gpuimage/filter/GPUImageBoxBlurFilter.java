@@ -16,6 +16,8 @@
 
 package jp.co.cyberagent.android.gpuimage.filter;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A hardware-accelerated 9-hit box blur of an image
  * <p>
@@ -99,7 +101,7 @@ public class GPUImageBoxBlurFilter extends GPUImageTwoPassTextureSamplingFilter 
      */
     public void setBlurSize(float blurSize) {
         this.blurSize = blurSize;
-        runOnDraw(() -> initTexelOffsets());
+        initTexelOffsets();
     }
 
     @Override
@@ -110,5 +112,11 @@ public class GPUImageBoxBlurFilter extends GPUImageTwoPassTextureSamplingFilter 
     @Override
     public float getHorizontalTexelOffsetRatio() {
         return blurSize;
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageBoxBlurFilter(blurSize);
     }
 }

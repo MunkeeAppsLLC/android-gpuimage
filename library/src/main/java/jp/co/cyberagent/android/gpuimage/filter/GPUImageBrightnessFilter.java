@@ -18,6 +18,8 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * brightness value ranges from -1.0 to 1.0, with 0.0 as the normal level
  */
@@ -66,5 +68,11 @@ public class GPUImageBrightnessFilter extends BaseGPUImageFilter {
     public void setBrightness(final float brightness) {
         this.brightness = brightness;
         setFloat(brightnessLocation, this.brightness);
+    }
+
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageBrightnessFilter(brightness);
     }
 }

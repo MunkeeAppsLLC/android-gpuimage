@@ -89,12 +89,13 @@ public class GPUImageFilterGroup extends BaseGPUImageFilter {
         glTextureFlipBuffer.put(flipTexture).position(0);
     }
 
-    public void addFilter(GPUImageFilter aFilter) {
+    public GPUImageFilter addFilter(GPUImageFilter aFilter) {
         if (aFilter == null) {
-            return;
+            return null;
         }
         filters.add(aFilter);
         updateMergedFilters();
+        return aFilter;
     }
 
     public void removeFilter(GPUImageFilter filter) {
@@ -252,8 +253,7 @@ public class GPUImageFilterGroup extends BaseGPUImageFilter {
     @Override
     public GPUImageFilter copy() {
         GPUImageFilterGroup result = new GPUImageFilterGroup();
-        updateMergedFilters();
-        for (GPUImageFilter filter : mergedFilters) {
+        for (GPUImageFilter filter : filters) {
             if (!(filter instanceof GPUImageTransformFilter)) {
                 result.addFilter(filter.copy());
             }

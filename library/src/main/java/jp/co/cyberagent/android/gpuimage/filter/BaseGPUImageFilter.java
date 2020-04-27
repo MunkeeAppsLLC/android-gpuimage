@@ -130,6 +130,7 @@ public abstract class BaseGPUImageFilter implements GPUImageFilter {
     @Override
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
+        GLES20.glClearColor(0f, 0f, 0f, 0f);
         GLES20.glUseProgram(glProgId);
         runPendingOnDrawTasks();
         if (!isInitialized) {
