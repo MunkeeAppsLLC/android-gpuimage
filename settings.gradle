@@ -1,2 +1,2 @@
-include ':gpuimage'
+include ':library'
 include ':sample'
