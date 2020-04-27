@@ -4,7 +4,7 @@
     <application>
         <provider
             android:name=".GPUImageContextProvider"
-            android:authorities="${applicationId}.provider"
+            android:authorities="${applicationId}.gpuimage.context.provider"
             android:exported="false"/>
     </application>
 </manifest>

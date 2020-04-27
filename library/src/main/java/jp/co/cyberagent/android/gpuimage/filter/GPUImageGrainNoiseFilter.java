@@ -2,6 +2,8 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Performs a film Grain noise effect
  */
@@ -184,9 +186,17 @@ public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
         this.setGrainSize(grainSize);
     }
 
+    public float getTime() {
+        return time;
+    }
+
     public void setTime(float time) {
         this.time = time;
         this.setFloat(timeLocation, time);
+    }
+
+    public float getScale() {
+        return scale;
     }
 
     public void setScale(float scale) {
@@ -194,9 +204,17 @@ public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
         this.setFloat(scaleLocation, scale);
     }
 
+    public float getGrainAmount() {
+        return grainAmount;
+    }
+
     public void setGrainAmount(float grainAmount) {
         this.grainAmount = grainAmount;
         this.setFloat(grainAmmountLocation, grainAmount);
+    }
+
+    public float getGrainSize() {
+        return grainSize;
     }
 
     public void setGrainSize(float grainSize) {
@@ -204,19 +222,9 @@ public class GPUImageGrainNoiseFilter extends BaseGPUImageFilter {
         this.setFloat(grainSizeLocation, grainSize);
     }
 
-    public float getTime() {
-        return time;
-    }
-
-    public float getScale() {
-        return scale;
-    }
-
-    public float getGrainAmount() {
-        return grainAmount;
-    }
-
-    public float getGrainSize() {
-        return grainSize;
+    @NotNull
+    @Override
+    public GPUImageFilter copy() {
+        return new GPUImageGrainNoiseFilter(time, scale, grainAmount, grainSize);
     }
 }

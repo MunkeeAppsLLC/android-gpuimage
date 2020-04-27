@@ -18,8 +18,7 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.annotation.SuppressLint;
 import android.opengl.GLES20;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -28,6 +27,9 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import jp.co.cyberagent.android.gpuimage.util.Rotation;
+import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import static jp.co.cyberagent.android.gpuimage.GPUImageRenderer.CUBE;
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
@@ -38,20 +40,19 @@ import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE
  */
 public class GPUImageFilterGroup extends BaseGPUImageFilter {
 
+    private final FloatBuffer glCubeBuffer;
+    private final FloatBuffer glTextureBuffer;
+    private final FloatBuffer glTextureFlipBuffer;
     private List<GPUImageFilter> filters;
     private List<GPUImageFilter> mergedFilters;
     private int[] frameBuffers;
     private int[] frameBufferTextures;
 
-    private final FloatBuffer glCubeBuffer;
-    private final FloatBuffer glTextureBuffer;
-    private final FloatBuffer glTextureFlipBuffer;
-
     /**
      * Instantiates a new GPUImageFilterGroup with no filters.
      */
     public GPUImageFilterGroup() {
-        this(new ArrayList<GPUImageFilter>());
+        this(new ArrayList<>());
     }
 
     public GPUImageFilterGroup(GPUImageFilter... filters) {
@@ -88,12 +89,13 @@ public class GPUImageFilterGroup extends BaseGPUImageFilter {
         glTextureFlipBuffer.put(flipTexture).position(0);
     }
 
-    public void addFilter(GPUImageFilter aFilter) {
+    public GPUImageFilter addFilter(GPUImageFilter aFilter) {
         if (aFilter == null) {
-            return;
+            return null;
         }
         filters.add(aFilter);
         updateMergedFilters();
+        return aFilter;
     }
 
     public void removeFilter(GPUImageFilter filter) {
@@ -201,6 +203,7 @@ public class GPUImageFilterGroup extends BaseGPUImageFilter {
     @Override
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         runPendingOnDrawTasks();
         if (!isInitialized() || frameBuffers == null || frameBufferTextures == null) {
             return;
@@ -216,6 +219,7 @@ public class GPUImageFilterGroup extends BaseGPUImageFilter {
                     GLES20.glClearColor(0, 0, 0, 0);
                 }
 
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
                 if (i == 0) {
                     filter.onDraw(previousTexture, cubeBuffer, textureBuffer);
                 } else if (i == size - 1) {
@@ -249,8 +253,7 @@ public class GPUImageFilterGroup extends BaseGPUImageFilter {
     @Override
     public GPUImageFilter copy() {
         GPUImageFilterGroup result = new GPUImageFilterGroup();
-        updateMergedFilters();
-        for (GPUImageFilter filter : mergedFilters) {
+        for (GPUImageFilter filter : filters) {
             if (!(filter instanceof GPUImageTransformFilter)) {
                 result.addFilter(filter.copy());
             }

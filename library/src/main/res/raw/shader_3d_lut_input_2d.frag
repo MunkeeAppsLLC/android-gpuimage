@@ -42,10 +42,10 @@ highp vec4 sampleAs3DTexture(sampler2D tex, highp vec3 texCoord, highp float siz
 void main()
 {
     highp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);
-    if (textureColor.w == 0.0) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-    } else if (isInputImageTexture2Loaded == 0) {
+    if (isInputImageTexture2Loaded == 0) {
         gl_FragColor = textureColor;
+    } else if (textureColor.w == 0.0) {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
     } else {
         highp vec4 newColor = sampleAs3DTexture(inputImageTexture2, textureColor.rgb, dimension);
         gl_FragColor = vec4(mix(textureColor, newColor, intensity).rgb, textureColor.w);

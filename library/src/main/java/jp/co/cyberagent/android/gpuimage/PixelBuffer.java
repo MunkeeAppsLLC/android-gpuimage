@@ -85,18 +85,19 @@ public class PixelBuffer {
         mThreadOwner = Thread.currentThread().getName();
     }
 
-    public void setRenderer(final GLSurfaceView.Renderer renderer) {
+    public PixelBuffer setRenderer(final GLSurfaceView.Renderer renderer) {
         this.renderer = renderer;
 
         // Does this thread own the OpenGL context?
         if (!Thread.currentThread().getName().equals(mThreadOwner)) {
             Log.e(TAG, "setRenderer: This thread does not own the OpenGL context.");
-            return;
+            return null;
         }
 
         // Call the renderer initialization routines
         this.renderer.onSurfaceCreated(gl10, eglConfig);
         this.renderer.onSurfaceChanged(gl10, width, height);
+        return this;
     }
 
     public Bitmap getBitmap() {
@@ -114,10 +115,13 @@ public class PixelBuffer {
 
         // Call the renderer draw routine (it seems that some filters do not
         // work if this is only called once)
-        renderer.onDrawFrame(gl10);
-        renderer.onDrawFrame(gl10);
+        draw();
         convertToBitmap();
         return bitmap;
+    }
+
+    public void draw() {
+        renderer.onDrawFrame(gl10);
     }
 
     public void destroy() {
@@ -142,6 +146,19 @@ public class PixelBuffer {
                 EGL10.EGL_RENDERABLE_TYPE, 4,
                 EGL_NONE
         };
+
+        //int[] attribList = new int[]{
+        //                EGL_RED_SIZE, 8,
+        //                EGL_GREEN_SIZE, 8,
+        //                EGL_BLUE_SIZE, 8,
+        //                EGL_ALPHA_SIZE, 8,
+        //                EGL_DEPTH_SIZE, 16,
+        //                EGL_STENCIL_SIZE, 0,
+        //                EGL10.EGL_RENDERABLE_TYPE, 4,
+        //                EGL10.EGL_SAMPLE_BUFFERS, 1 /* true */,
+        //                EGL10.EGL_SAMPLES, 2,
+        //                EGL_NONE
+        //        };
 
         // No error checking performed, minimum required code to elucidate logic
         // Expand on this logic to be more selective in choosing a configuration

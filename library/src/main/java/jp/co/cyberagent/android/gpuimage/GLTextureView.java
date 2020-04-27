@@ -8,19 +8,13 @@ import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 
+import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.opengles.GL;
+import javax.microedition.khronos.opengles.GL10;
 import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGL11;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
-import javax.microedition.khronos.opengles.GL;
-import javax.microedition.khronos.opengles.GL10;
 
 /*
  * Copyright (C) 2018 Wasabeef
@@ -40,17 +34,6 @@ import javax.microedition.khronos.opengles.GL10;
 public class GLTextureView extends TextureView
         implements TextureView.SurfaceTextureListener, View.OnLayoutChangeListener {
 
-    private final static String TAG = GLTextureView.class.getSimpleName();
-
-    private static final boolean LOG_ALL = false;
-    private static final boolean LOG_ATTACH_DETACH = LOG_ALL || false;
-    private static final boolean LOG_THREADS = LOG_ALL || false;
-    private static final boolean LOG_PAUSE_RESUME = LOG_ALL || false;
-    private static final boolean LOG_SURFACE = LOG_ALL || false;
-    private static final boolean LOG_RENDERER = LOG_ALL || false;
-    private static final boolean LOG_RENDERER_DRAW_FRAME = LOG_ALL || false;
-    private static final boolean LOG_EGL = LOG_ALL || false;
-
     /**
      * The renderer only renders
      * when the surface is created, or when {@link #requestRender} is called.
@@ -68,7 +51,6 @@ public class GLTextureView extends TextureView
      * @see #setRenderMode(int)
      */
     public final static int RENDERMODE_CONTINUOUSLY = 1;
-
     /**
      * Check glError() after every GL call and throw an exception if glError indicates
      * that an error has occurred. This can be used to help track down which OpenGL ES call
@@ -78,7 +60,6 @@ public class GLTextureView extends TextureView
      * @see #setDebugFlags
      */
     public final static int DEBUG_CHECK_GL_ERROR = 1;
-
     /**
      * Log GL calls to the system log at "verbose" level with tag "GLTextureView".
      *
@@ -86,6 +67,28 @@ public class GLTextureView extends TextureView
      * @see #setDebugFlags
      */
     public final static int DEBUG_LOG_GL_CALLS = 2;
+    private final static String TAG = GLTextureView.class.getSimpleName();
+    private static final boolean LOG_ALL = false;
+    private static final boolean LOG_ATTACH_DETACH = LOG_ALL || false;
+    private static final boolean LOG_THREADS = LOG_ALL || false;
+    private static final boolean LOG_PAUSE_RESUME = LOG_ALL || false;
+    private static final boolean LOG_SURFACE = LOG_ALL || false;
+    private static final boolean LOG_RENDERER = LOG_ALL || false;
+    private static final boolean LOG_RENDERER_DRAW_FRAME = LOG_ALL || false;
+    private static final boolean LOG_EGL = LOG_ALL || false;
+    private final GLThreadManager glThreadManager = new GLThreadManager();
+    private final WeakReference<GLTextureView> mThisWeakRef = new WeakReference<>(this);
+    private GLThread glThread;
+    private Renderer renderer;
+    private boolean detached;
+    private EGLConfigChooser eglConfigChooser;
+    private EGLContextFactory eglContextFactory;
+    private EGLWindowSurfaceFactory eglWindowSurfaceFactory;
+    private GLWrapper glWrapper;
+    private int debugFlags;
+    private int eglContextClientVersion;
+    private boolean preserveEGLContextOnPause;
+    private List<SurfaceTextureListener> surfaceTextureListeners = new ArrayList<>();
 
     /**
      * Standard View constructor. In order to render something, you
@@ -141,6 +144,15 @@ public class GLTextureView extends TextureView
     }
 
     /**
+     * Get the current value of the debug flags.
+     *
+     * @return the current value of the debug flags.
+     */
+    public int getDebugFlags() {
+        return debugFlags;
+    }
+
+    /**
      * Set the debug flags to a new value. The value is
      * constructed by OR-together zero or more
      * of the DEBUG_CHECK_* constants. The debug flags take effect
@@ -155,12 +167,10 @@ public class GLTextureView extends TextureView
     }
 
     /**
-     * Get the current value of the debug flags.
-     *
-     * @return the current value of the debug flags.
+     * @return true if the EGL context will be preserved when paused
      */
-    public int getDebugFlags() {
-        return debugFlags;
+    public boolean getPreserveEGLContextOnPause() {
+        return preserveEGLContextOnPause;
     }
 
     /**
@@ -183,13 +193,6 @@ public class GLTextureView extends TextureView
      */
     public void setPreserveEGLContextOnPause(boolean preserveOnPause) {
         preserveEGLContextOnPause = preserveOnPause;
-    }
-
-    /**
-     * @return true if the EGL context will be preserved when paused
-     */
-    public boolean getPreserveEGLContextOnPause() {
-        return preserveEGLContextOnPause;
     }
 
     /**
@@ -346,6 +349,18 @@ public class GLTextureView extends TextureView
     }
 
     /**
+     * Get the current rendering mode. May be called
+     * from any thread. Must not be called before a renderer has been set.
+     *
+     * @return the current rendering mode.
+     * @see #RENDERMODE_CONTINUOUSLY
+     * @see #RENDERMODE_WHEN_DIRTY
+     */
+    public int getRenderMode() {
+        return glThread.getRenderMode();
+    }
+
+    /**
      * Set the rendering mode. When renderMode is
      * RENDERMODE_CONTINUOUSLY, the renderer is called
      * repeatedly to re-render the scene. When renderMode
@@ -366,18 +381,6 @@ public class GLTextureView extends TextureView
     }
 
     /**
-     * Get the current rendering mode. May be called
-     * from any thread. Must not be called before a renderer has been set.
-     *
-     * @return the current rendering mode.
-     * @see #RENDERMODE_CONTINUOUSLY
-     * @see #RENDERMODE_WHEN_DIRTY
-     */
-    public int getRenderMode() {
-        return glThread.getRenderMode();
-    }
-
-    /**
      * Request that the renderer render a frame.
      * This method is typically used when the render mode has been set to
      * {@link #RENDERMODE_WHEN_DIRTY}, so that frames are only rendered on demand.
@@ -395,6 +398,8 @@ public class GLTextureView extends TextureView
     public void surfaceCreated(SurfaceTexture texture) {
         glThread.surfaceCreated();
     }
+
+    // ----------------------------------------------------------------------
 
     /**
      * This method is part of the SurfaceHolder.Callback interface, and is
@@ -522,7 +527,11 @@ public class GLTextureView extends TextureView
         }
     }
 
-    // ----------------------------------------------------------------------
+    private void checkRenderThreadState() {
+        if (glThread != null) {
+            throw new IllegalStateException("setRenderer has already been called for this instance.");
+        }
+    }
 
     /**
      * An interface used to wrap a GL interface.
@@ -679,29 +688,6 @@ public class GLTextureView extends TextureView
         void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context);
     }
 
-    private class DefaultContextFactory implements EGLContextFactory {
-        private int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
-
-        public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig config) {
-            int[] attrib_list = {
-                    EGL_CONTEXT_CLIENT_VERSION, eglContextClientVersion, EGL10.EGL_NONE
-            };
-
-            return egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT,
-                    eglContextClientVersion != 0 ? attrib_list : null);
-        }
-
-        public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context) {
-            if (!egl.eglDestroyContext(display, context)) {
-                Log.e("DefaultContextFactory", "display:" + display + " context: " + context);
-                if (LOG_THREADS) {
-                    Log.i("DefaultContextFactory", "tid=" + Thread.currentThread().getId());
-                }
-                EglHelper.throwEglException("eglDestroyContex", egl.eglGetError());
-            }
-        }
-    }
-
     /**
      * An interface for customizing the eglCreateWindowSurface and eglDestroySurface calls.
      * <p>
@@ -716,6 +702,27 @@ public class GLTextureView extends TextureView
                                        Object nativeWindow);
 
         void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface);
+    }
+
+    /**
+     * An interface for choosing an EGLConfig configuration from a list of
+     * potential configurations.
+     * <p>
+     * This interface must be implemented by clients wishing to call
+     * {@link GLTextureView#setEGLConfigChooser(EGLConfigChooser)}
+     */
+    public interface EGLConfigChooser {
+        /**
+         * Choose a configuration from the list. Implementors typically
+         * implement this method by calling
+         * {@link EGL10#eglChooseConfig} and iterating through the results. Please consult the
+         * EGL specification available from The Khronos Group to learn how to call eglChooseConfig.
+         *
+         * @param egl     the EGL10 for the current display.
+         * @param display the current display.
+         * @return the chosen configuration.
+         */
+        EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
     }
 
     private static class DefaultWindowSurfaceFactory implements EGLWindowSurfaceFactory {
@@ -743,150 +750,36 @@ public class GLTextureView extends TextureView
     }
 
     /**
-     * An interface for choosing an EGLConfig configuration from a list of
-     * potential configurations.
-     * <p>
-     * This interface must be implemented by clients wishing to call
-     * {@link GLTextureView#setEGLConfigChooser(EGLConfigChooser)}
-     */
-    public interface EGLConfigChooser {
-        /**
-         * Choose a configuration from the list. Implementors typically
-         * implement this method by calling
-         * {@link EGL10#eglChooseConfig} and iterating through the results. Please consult the
-         * EGL specification available from The Khronos Group to learn how to call eglChooseConfig.
-         *
-         * @param egl     the EGL10 for the current display.
-         * @param display the current display.
-         * @return the chosen configuration.
-         */
-        EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
-    }
-
-    private abstract class BaseConfigChooser implements EGLConfigChooser {
-        public BaseConfigChooser(int[] configSpec) {
-            mConfigSpec = filterConfigSpec(configSpec);
-        }
-
-        public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
-            int[] num_config = new int[1];
-            if (!egl.eglChooseConfig(display, mConfigSpec, null, 0, num_config)) {
-                throw new IllegalArgumentException("eglChooseConfig failed");
-            }
-
-            int numConfigs = num_config[0];
-
-            if (numConfigs <= 0) {
-                throw new IllegalArgumentException("No configs match configSpec");
-            }
-
-            EGLConfig[] configs = new EGLConfig[numConfigs];
-            if (!egl.eglChooseConfig(display, mConfigSpec, configs, numConfigs, num_config)) {
-                throw new IllegalArgumentException("eglChooseConfig#2 failed");
-            }
-            EGLConfig config = chooseConfig(egl, display, configs);
-            if (config == null) {
-                throw new IllegalArgumentException("No config chosen");
-            }
-            return config;
-        }
-
-        abstract EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs);
-
-        protected int[] mConfigSpec;
-
-        private int[] filterConfigSpec(int[] configSpec) {
-            if (eglContextClientVersion != 2) {
-                return configSpec;
-            }
-            /* We know none of the subclasses define EGL_RENDERABLE_TYPE.
-             * And we know the configSpec is well formed.
-             */
-            int len = configSpec.length;
-            int[] newConfigSpec = new int[len + 2];
-            System.arraycopy(configSpec, 0, newConfigSpec, 0, len - 1);
-            newConfigSpec[len - 1] = EGL10.EGL_RENDERABLE_TYPE;
-            newConfigSpec[len] = 0x0004; /* EGL_OPENGL_ES2_BIT */
-            newConfigSpec[len + 1] = EGL10.EGL_NONE;
-            return newConfigSpec;
-        }
-    }
-
-    /**
-     * Choose a configuration with exactly the specified r,g,b,a sizes,
-     * and at least the specified depth and stencil sizes.
-     */
-    private class ComponentSizeChooser extends BaseConfigChooser {
-        public ComponentSizeChooser(int redSize, int greenSize, int blueSize, int alphaSize,
-                                    int depthSize, int stencilSize) {
-            super(new int[]{
-                    EGL10.EGL_RED_SIZE, redSize, EGL10.EGL_GREEN_SIZE, greenSize, EGL10.EGL_BLUE_SIZE,
-                    blueSize, EGL10.EGL_ALPHA_SIZE, alphaSize, EGL10.EGL_DEPTH_SIZE, depthSize,
-                    EGL10.EGL_STENCIL_SIZE, stencilSize, EGL10.EGL_NONE
-            });
-            value = new int[1];
-            this.redSize = redSize;
-            this.greenSize = greenSize;
-            this.blueSize = blueSize;
-            this.alphaSize = alphaSize;
-            this.depthSize = depthSize;
-            this.stencilSize = stencilSize;
-        }
-
-        @Override
-        public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
-            for (EGLConfig config : configs) {
-                int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
-                int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
-                if ((d >= depthSize) && (s >= stencilSize)) {
-                    int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
-                    int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
-                    int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
-                    int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
-                    if ((r == redSize) && (g == greenSize) && (b == blueSize) && (a == alphaSize)) {
-                        return config;
-                    }
-                }
-            }
-            return null;
-        }
-
-        private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config, int attribute,
-                                     int defaultValue) {
-
-            if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
-                return value[0];
-            }
-            return defaultValue;
-        }
-
-        private int[] value;
-        // Subclasses can adjust these values:
-        protected int redSize;
-        protected int greenSize;
-        protected int blueSize;
-        protected int alphaSize;
-        protected int depthSize;
-        protected int stencilSize;
-    }
-
-    /**
-     * This class will choose a RGB_888 surface with
-     * or without a depth buffer.
-     */
-    private class SimpleEGLConfigChooser extends ComponentSizeChooser {
-        public SimpleEGLConfigChooser(boolean withDepthBuffer) {
-            super(8, 8, 8, 0, withDepthBuffer ? 16 : 0, 0);
-        }
-    }
-
-    /**
      * An EGL helper class.
      */
 
     private static class EglHelper {
+        EGL10 egl;
+        EGLDisplay eglDisplay;
+        EGLSurface eglSurface;
+        EGLConfig eglConfig;
+        EGLContext eglContext;
+        private WeakReference<GLTextureView> glTextureViewWeakRef;
+
         public EglHelper(WeakReference<GLTextureView> glTextureViewWeakReference) {
             this.glTextureViewWeakRef = glTextureViewWeakReference;
+        }
+
+        public static void throwEglException(String function, int error) {
+            String message = formatEglError(function, error);
+            if (LOG_THREADS) {
+                Log.e("EglHelper",
+                        "throwEglException tid=" + Thread.currentThread().getId() + " " + message);
+            }
+            throw new RuntimeException(message);
+        }
+
+        public static void logEglErrorAsWarning(String tag, String function, int error) {
+            Log.w(tag, formatEglError(function, error));
+        }
+
+        public static String formatEglError(String function, int error) {
+            return function + " failed: " + error;
         }
 
         /**
@@ -1084,30 +977,6 @@ public class GLTextureView extends TextureView
         private void throwEglException(String function) {
             throwEglException(function, egl.eglGetError());
         }
-
-        public static void throwEglException(String function, int error) {
-            String message = formatEglError(function, error);
-            if (LOG_THREADS) {
-                Log.e("EglHelper",
-                        "throwEglException tid=" + Thread.currentThread().getId() + " " + message);
-            }
-            throw new RuntimeException(message);
-        }
-
-        public static void logEglErrorAsWarning(String tag, String function, int error) {
-            Log.w(tag, formatEglError(function, error));
-        }
-
-        public static String formatEglError(String function, int error) {
-            return function + " failed: " + error;
-        }
-
-        private WeakReference<GLTextureView> glTextureViewWeakRef;
-        EGL10 egl;
-        EGLDisplay eglDisplay;
-        EGLSurface eglSurface;
-        EGLConfig eglConfig;
-        EGLContext eglContext;
     }
 
     /**
@@ -1120,6 +989,32 @@ public class GLTextureView extends TextureView
      */
     static class GLThread extends Thread {
         private GLThreadManager glThreadManager;
+        // Once the thread is started, all accesses to the following member
+        // variables are protected by the glThreadManager monitor
+        private boolean shouldExit;
+        private boolean exited;
+        private boolean requestPaused;
+        private boolean paused;
+        private boolean hasSurface;
+        private boolean surfaceIsBad;
+        private boolean waitingForSurface;
+        private boolean haveEglContext;
+        private boolean haveEglSurface;
+        private boolean shouldReleaseEglContext;
+        private int width;
+        private int height;
+        private int renderMode;
+        private boolean requestRender;
+        private boolean renderComplete;
+        private ArrayList<Runnable> eventQueue = new ArrayList<>();
+        private boolean sizeChanged = true;
+        private EglHelper eglHelper;
+        /**
+         * Set once at thread construction time, nulled out when the parent view is garbage
+         * called. This weak reference allows the GLTextureView to be garbage collected while
+         * the GLThread is still alive.
+         */
+        private WeakReference<GLTextureView> glTextureViewWeakRef;
 
         GLThread(WeakReference<GLTextureView> glTextureViewWeakRef, GLThreadManager glThreadManager) {
             super();
@@ -1156,7 +1051,7 @@ public class GLTextureView extends TextureView
                 haveEglSurface = false;
                 eglHelper.destroySurface();
                 GLTextureView view = glTextureViewWeakRef.get();
-                if(view != null) {
+                if (view != null) {
                     view.renderer.onSurfaceDestroyed();
                 }
             }
@@ -1171,7 +1066,7 @@ public class GLTextureView extends TextureView
                 eglHelper.finish();
                 haveEglContext = false;
                 GLTextureView view = glTextureViewWeakRef.get();
-                if(view != null) {
+                if (view != null) {
                     view.renderer.onEglContextDestroyed();
                 }
                 glThreadManager.releaseEglContextLocked(this);
@@ -1468,6 +1363,12 @@ public class GLTextureView extends TextureView
                     requestRender || (renderMode == RENDERMODE_CONTINUOUSLY));
         }
 
+        public int getRenderMode() {
+            synchronized (glThreadManager) {
+                return renderMode;
+            }
+        }
+
         public void setRenderMode(int renderMode) {
             if (!((RENDERMODE_WHEN_DIRTY <= renderMode) && (renderMode <= RENDERMODE_CONTINUOUSLY))) {
                 throw new IllegalArgumentException("renderMode");
@@ -1475,12 +1376,6 @@ public class GLTextureView extends TextureView
             synchronized (glThreadManager) {
                 this.renderMode = renderMode;
                 glThreadManager.notifyAll();
-            }
-        }
-
-        public int getRenderMode() {
-            synchronized (glThreadManager) {
-                return renderMode;
             }
         }
 
@@ -1606,6 +1501,8 @@ public class GLTextureView extends TextureView
             }
         }
 
+        // End of member variables protected by the glThreadManager monitor.
+
         public void requestReleaseEglContextLocked() {
             shouldReleaseEglContext = true;
             glThreadManager.notifyAll();
@@ -1625,40 +1522,11 @@ public class GLTextureView extends TextureView
                 glThreadManager.notifyAll();
             }
         }
-
-        // Once the thread is started, all accesses to the following member
-        // variables are protected by the glThreadManager monitor
-        private boolean shouldExit;
-        private boolean exited;
-        private boolean requestPaused;
-        private boolean paused;
-        private boolean hasSurface;
-        private boolean surfaceIsBad;
-        private boolean waitingForSurface;
-        private boolean haveEglContext;
-        private boolean haveEglSurface;
-        private boolean shouldReleaseEglContext;
-        private int width;
-        private int height;
-        private int renderMode;
-        private boolean requestRender;
-        private boolean renderComplete;
-        private ArrayList<Runnable> eventQueue = new ArrayList<>();
-        private boolean sizeChanged = true;
-
-        // End of member variables protected by the glThreadManager monitor.
-
-        private EglHelper eglHelper;
-
-        /**
-         * Set once at thread construction time, nulled out when the parent view is garbage
-         * called. This weak reference allows the GLTextureView to be garbage collected while
-         * the GLThread is still alive.
-         */
-        private WeakReference<GLTextureView> glTextureViewWeakRef;
     }
 
     static class LogWriter extends Writer {
+
+        private StringBuilder builder = new StringBuilder();
 
         @Override
         public void close() {
@@ -1688,18 +1556,23 @@ public class GLTextureView extends TextureView
                 builder.delete(0, builder.length());
             }
         }
-
-        private StringBuilder builder = new StringBuilder();
-    }
-
-    private void checkRenderThreadState() {
-        if (glThread != null) {
-            throw new IllegalStateException("setRenderer has already been called for this instance.");
-        }
     }
 
     private static class GLThreadManager {
+        private static final int kGLES_20 = 0x20000;
+        private static final String kMSM7K_RENDERER_PREFIX = "Q3Dimension MSM7500 ";
         private static String TAG = "GLThreadManager";
+        /**
+         * This check was required for some pre-Android-3.0 hardware. Android 3.0 provides
+         * support for hardware-accelerated views, therefore multiple EGL contexts are
+         * supported on all Android 3.0+ EGL drivers.
+         */
+        private boolean glesVersionCheckComplete;
+        private int glesVersion;
+        private boolean glesDriverCheckComplete;
+        private boolean multipleGLESContextsAllowed;
+        private boolean limitedGLESContexts;
+        private GLThread eglOwner;
 
         public synchronized void threadExiting(GLThread thread) {
             if (LOG_THREADS) {
@@ -1784,34 +1657,145 @@ public class GLTextureView extends TextureView
                 glesVersionCheckComplete = true;
             }
         }
-
-        /**
-         * This check was required for some pre-Android-3.0 hardware. Android 3.0 provides
-         * support for hardware-accelerated views, therefore multiple EGL contexts are
-         * supported on all Android 3.0+ EGL drivers.
-         */
-        private boolean glesVersionCheckComplete;
-        private int glesVersion;
-        private boolean glesDriverCheckComplete;
-        private boolean multipleGLESContextsAllowed;
-        private boolean limitedGLESContexts;
-        private static final int kGLES_20 = 0x20000;
-        private static final String kMSM7K_RENDERER_PREFIX = "Q3Dimension MSM7500 ";
-        private GLThread eglOwner;
     }
 
-    private final GLThreadManager glThreadManager = new GLThreadManager();
+    private class DefaultContextFactory implements EGLContextFactory {
+        private int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
-    private final WeakReference<GLTextureView> mThisWeakRef = new WeakReference<>(this);
-    private GLThread glThread;
-    private Renderer renderer;
-    private boolean detached;
-    private EGLConfigChooser eglConfigChooser;
-    private EGLContextFactory eglContextFactory;
-    private EGLWindowSurfaceFactory eglWindowSurfaceFactory;
-    private GLWrapper glWrapper;
-    private int debugFlags;
-    private int eglContextClientVersion;
-    private boolean preserveEGLContextOnPause;
-    private List<SurfaceTextureListener> surfaceTextureListeners = new ArrayList<>();
+        public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig config) {
+            int[] attrib_list = {
+                    EGL_CONTEXT_CLIENT_VERSION, eglContextClientVersion, EGL10.EGL_NONE
+            };
+
+            return egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT,
+                    eglContextClientVersion != 0 ? attrib_list : null);
+        }
+
+        public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context) {
+            if (!egl.eglDestroyContext(display, context)) {
+                Log.e("DefaultContextFactory", "display:" + display + " context: " + context);
+                if (LOG_THREADS) {
+                    Log.i("DefaultContextFactory", "tid=" + Thread.currentThread().getId());
+                }
+                EglHelper.throwEglException("eglDestroyContex", egl.eglGetError());
+            }
+        }
+    }
+
+    private abstract class BaseConfigChooser implements EGLConfigChooser {
+        protected int[] mConfigSpec;
+
+        public BaseConfigChooser(int[] configSpec) {
+            mConfigSpec = filterConfigSpec(configSpec);
+        }
+
+        public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
+            int[] num_config = new int[1];
+            if (!egl.eglChooseConfig(display, mConfigSpec, null, 0, num_config)) {
+                throw new IllegalArgumentException("eglChooseConfig failed");
+            }
+
+            int numConfigs = num_config[0];
+
+            if (numConfigs <= 0) {
+                throw new IllegalArgumentException("No configs match configSpec");
+            }
+
+            EGLConfig[] configs = new EGLConfig[numConfigs];
+            if (!egl.eglChooseConfig(display, mConfigSpec, configs, numConfigs, num_config)) {
+                throw new IllegalArgumentException("eglChooseConfig#2 failed");
+            }
+            EGLConfig config = chooseConfig(egl, display, configs);
+            if (config == null) {
+                throw new IllegalArgumentException("No config chosen");
+            }
+            return config;
+        }
+
+        abstract EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs);
+
+        private int[] filterConfigSpec(int[] configSpec) {
+            if (eglContextClientVersion != 2) {
+                return configSpec;
+            }
+            /* We know none of the subclasses define EGL_RENDERABLE_TYPE.
+             * And we know the configSpec is well formed.
+             */
+            int len = configSpec.length;
+            int[] newConfigSpec = new int[len + 2];
+            System.arraycopy(configSpec, 0, newConfigSpec, 0, len - 1);
+            newConfigSpec[len - 1] = EGL10.EGL_RENDERABLE_TYPE;
+            newConfigSpec[len] = 0x0004; /* EGL_OPENGL_ES2_BIT */
+            newConfigSpec[len + 1] = EGL10.EGL_NONE;
+            return newConfigSpec;
+        }
+    }
+
+    /**
+     * Choose a configuration with exactly the specified r,g,b,a sizes,
+     * and at least the specified depth and stencil sizes.
+     */
+    private class ComponentSizeChooser extends BaseConfigChooser {
+        // Subclasses can adjust these values:
+        protected int redSize;
+        protected int greenSize;
+        protected int blueSize;
+        protected int alphaSize;
+        protected int depthSize;
+        protected int stencilSize;
+        private int[] value;
+
+        public ComponentSizeChooser(int redSize, int greenSize, int blueSize, int alphaSize,
+                                    int depthSize, int stencilSize) {
+            super(new int[]{
+                    EGL10.EGL_RED_SIZE, redSize, EGL10.EGL_GREEN_SIZE, greenSize, EGL10.EGL_BLUE_SIZE,
+                    blueSize, EGL10.EGL_ALPHA_SIZE, alphaSize, EGL10.EGL_DEPTH_SIZE, depthSize,
+                    EGL10.EGL_STENCIL_SIZE, stencilSize, EGL10.EGL_NONE
+            });
+            value = new int[1];
+            this.redSize = redSize;
+            this.greenSize = greenSize;
+            this.blueSize = blueSize;
+            this.alphaSize = alphaSize;
+            this.depthSize = depthSize;
+            this.stencilSize = stencilSize;
+        }
+
+        @Override
+        public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
+            for (EGLConfig config : configs) {
+                int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
+                int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
+                if ((d >= depthSize) && (s >= stencilSize)) {
+                    int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
+                    int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
+                    int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
+                    int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
+                    if ((r == redSize) && (g == greenSize) && (b == blueSize) && (a == alphaSize)) {
+                        return config;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config, int attribute,
+                                     int defaultValue) {
+
+            if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
+                return value[0];
+            }
+            return defaultValue;
+        }
+    }
+
+    /**
+     * This class will choose a RGB_888 surface with
+     * or without a depth buffer.
+     */
+    private class SimpleEGLConfigChooser extends ComponentSizeChooser {
+        public SimpleEGLConfigChooser(boolean withDepthBuffer) {
+            super(8, 8, 8, 0, withDepthBuffer ? 16 : 0, 0);
+        }
+    }
 }

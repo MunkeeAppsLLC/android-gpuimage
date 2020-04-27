@@ -32,6 +32,7 @@ object GPUImageFilterTools {
         listener: (filter: BaseGPUImageFilter) -> Unit
     ) {
         val filters = FilterList().apply {
+            addFilter("FXAA", FilterType.FXAA)
             addFilter("3DLUT Amatorka ", FilterType.LOOKUP_AMATORKA)
             addFilter("3DLookup sampler3D", FilterType.LOOKUP_SAMPLER_3D)
             addFilter("3DLookup sampler2D", FilterType.LOOKUP_SAMPLER_2D)
@@ -156,13 +157,6 @@ object GPUImageFilterTools {
             FilterType.THREE_X_THREE_CONVOLUTION -> GPUImage3x3ConvolutionFilter()
             FilterType.EMBOSS -> GPUImageEmbossFilter()
             FilterType.POSTERIZE -> GPUImagePosterizeFilter()
-            FilterType.FILTER_GROUP -> GPUImageFilterGroup(
-                listOf(
-                    GPUImageContrastFilter(),
-                    GPUImageDirectionalSobelEdgeDetectionFilter(),
-                    GPUImageGrayscaleFilter()
-                )
-            )
             FilterType.SATURATION -> GPUImageSaturationFilter(1.0f)
             FilterType.EXPOSURE -> GPUImageExposureFilter(0.0f)
             FilterType.HIGHLIGHT_SHADOW -> GPUImageHighlightShadowFilter(
@@ -327,6 +321,15 @@ object GPUImageFilterTools {
                 bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.lookup_amatorka)
             }
 
+            FilterType.FILTER_GROUP -> GPUImageFilterGroup(
+                    listOf(
+                            GPUImage3DSampler3DLutTableFilter().apply {
+                                texture = BitmapFactory.decodeResource(context.resources, R.drawable.tiny_lookup_8_by_64)
+                            }
+                    )
+            )
+
+            FilterType.FXAA -> GPUImageFxaaFilter()
         }
 
     }
@@ -352,7 +355,8 @@ object GPUImageFilterTools {
         BLEND_COLOR, BLEND_HUE, BLEND_SATURATION, BLEND_LUMINOSITY, BLEND_LINEAR_BURN, BLEND_SOFT_LIGHT, BLEND_SUBTRACT, BLEND_CHROMA_KEY, BLEND_NORMAL,
         GAUSSIAN_BLUR, CROSSHATCH, BOX_BLUR, CGA_COLORSPACE, DILATION, KUWAHARA, RGB_DILATION, SKETCH, TOON, SMOOTH_TOON, BULGE_DISTORTION, GLASS_SPHERE, HAZE, LAPLACIAN, NON_MAXIMUM_SUPPRESSION,
         SPHERE_REFRACTION, SWIRL, WEAK_PIXEL_INCLUSION, FALSE_COLOR, COLOR_BALANCE, LEVELS_FILTER_MIN, BILATERAL_BLUR, ZOOM_BLUR, HALFTONE, TRANSFORM2D, SOLARIZE, VIBRANCE, PERLIN_NOISE, GRAIN_NOISE,
-        LOOKUP_AMATORKA, LOOKUP_SAMPLER_3D, LOOKUP_SAMPLER_2D
+        LOOKUP_AMATORKA, LOOKUP_SAMPLER_3D, LOOKUP_SAMPLER_2D,
+        FXAA
     }
 
     private class FilterList : ArrayList<Pair<String, FilterType>>() {

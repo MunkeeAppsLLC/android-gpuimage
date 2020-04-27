@@ -17,7 +17,7 @@ int and(int a, int b, int bitCount) {
     int result = 0;
     int n = 1;
 
-    for(int i = 0; i < bitCount; i++) {
+    for (int i = 0; i < bitCount; i++) {
         if ((modi(a, 2) == 1) && (modi(b, 2) == 1)) {
             result += n;
         }
@@ -26,7 +26,7 @@ int and(int a, int b, int bitCount) {
         b = b / 2;
         n = n * 2;
 
-        if(!(a > 0 && b > 0)) {
+        if (!(a > 0 && b > 0)) {
             break;
         }
     }
@@ -52,8 +52,8 @@ void main()
     int lut = int(lutMatrix[lutIndex]);
 
     float rFull = float(and(lut, 0xFF, 32));
-    float gFull = float(and(lut, 0xFF00, 64) / 4096); // >> 8
-    float bFull = float(and(lut, 0xFF0000, 96) / 65536); // >> 16;
+    float gFull = float(and(lut, 0xFF00, 64) / 4096);// >> 8
+    float bFull = float(and(lut, 0xFF0000, 96) / 65536);// >> 16;
 
     float r = lerp(identityColor.r, rFull, intensity);
     float g = lerp(identityColor.g, gFull, intensity);

@@ -96,10 +96,18 @@ public class GPUImage3x3TextureSamplingFilter extends BaseGPUImageFilter {
         }
     }
 
+    public float getTexelWidth() {
+        return texelWidth;
+    }
+
     public void setTexelWidth(final float texelWidth) {
         hasOverriddenImageSizeFactor = true;
         this.texelWidth = texelWidth;
         setFloat(uniformTexelWidthLocation, texelWidth);
+    }
+
+    public float getTexelHeight() {
+        return texelHeight;
     }
 
     public void setTexelHeight(final float texelHeight) {
@@ -108,23 +116,15 @@ public class GPUImage3x3TextureSamplingFilter extends BaseGPUImageFilter {
         setFloat(uniformTexelHeightLocation, texelHeight);
     }
 
+    public float getLineSize() {
+        return lineSize;
+    }
+
     public void setLineSize(final float size) {
         lineSize = size;
         texelWidth = size / getOutputWidth();
         texelHeight = size / getOutputHeight();
         updateTexelValues();
-    }
-
-    public float getTexelWidth() {
-        return texelWidth;
-    }
-
-    public float getTexelHeight() {
-        return texelHeight;
-    }
-
-    public float getLineSize() {
-        return lineSize;
     }
 
     private void updateTexelValues() {

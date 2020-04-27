@@ -31,17 +31,17 @@ import java.nio.FloatBuffer;
 public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
     private static final String VERTEX_SHADER =
             "attribute vec4 position;\n" +
-            "attribute vec4 inputTextureCoordinate;\n" +
-            "attribute vec4 inputTextureCoordinate2;\n" +
-            " \n" +
-            "varying vec2 textureCoordinate;\n" +
-            "varying vec2 textureCoordinate2;\n" +
-            " \n" +
-            "void main()\n" +
-            "{\n" +
-            "    gl_Position = position;\n" +
-            "    textureCoordinate = inputTextureCoordinate.xy;\n" +
-            "    textureCoordinate2 = inputTextureCoordinate2.xy;\n" +
+                    "attribute vec4 inputTextureCoordinate;\n" +
+                    "attribute vec4 inputTextureCoordinate2;\n" +
+                    " \n" +
+                    "varying vec2 textureCoordinate;\n" +
+                    "varying vec2 textureCoordinate2;\n" +
+                    " \n" +
+                    "void main()\n" +
+                    "{\n" +
+                    "    gl_Position = position;\n" +
+                    "    textureCoordinate = inputTextureCoordinate.xy;\n" +
+                    "    textureCoordinate2 = inputTextureCoordinate2.xy;\n" +
                     "}";
 
     private int filterSecondTextureCoordinateAttribute;
@@ -85,6 +85,10 @@ public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
         }
     }
 
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
     public void setBitmap(final Bitmap bitmap) {
         if (this.bitmap != null || bitmap == null || bitmap.isRecycled()) {
             return;
@@ -100,10 +104,6 @@ public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
                 setInputImageTexture2Loaded(true);
             }
         });
-    }
-
-    public Bitmap getBitmap() {
-        return bitmap;
     }
 
     private void setInputImageTexture2Loaded(boolean inputImageTexture2Loaded) {
@@ -123,7 +123,7 @@ public abstract class BaseGPUImageTwoInputFilter extends BaseGPUImageFilter {
             bitmap = null;
         }
         setInputImageTexture2Loaded(false);
-        GLES20.glDeleteTextures(1, new int[]{ filterSourceTexture2 }, 0);
+        GLES20.glDeleteTextures(1, new int[]{filterSourceTexture2}, 0);
         filterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
     }
 

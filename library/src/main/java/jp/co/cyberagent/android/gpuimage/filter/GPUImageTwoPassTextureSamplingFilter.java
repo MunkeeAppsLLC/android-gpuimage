@@ -18,7 +18,18 @@ package jp.co.cyberagent.android.gpuimage.filter;
 
 import android.opengl.GLES20;
 
+import androidx.annotation.RawRes;
+
 public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter {
+
+    public GPUImageTwoPassTextureSamplingFilter(@RawRes int firstVertexShader,
+                                                @RawRes int firstFragmentShader,
+                                                @RawRes int secondVertexShader,
+                                                @RawRes int secondFragmentShader) {
+        super(firstVertexShader, firstFragmentShader,
+                secondVertexShader, secondFragmentShader);
+    }
+
     public GPUImageTwoPassTextureSamplingFilter(String firstVertexShader, String firstFragmentShader,
                                                 String secondVertexShader, String secondFragmentShader) {
         super(firstVertexShader, firstFragmentShader,
@@ -31,21 +42,25 @@ public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter 
         initTexelOffsets();
     }
 
-    protected void initTexelOffsets() {
-        float ratio = getHorizontalTexelOffsetRatio();
-        GPUImageFilter filter = getFilters().get(0);
+    private static void updateTexelDimensions(GPUImageFilter filter,
+                                              float widthOffset, float heightOffset) {
         int texelWidthOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelWidthOffset");
         int texelHeightOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelHeightOffset");
-        filter.setFloat(texelWidthOffsetLocation, ratio / getOutputWidth());
-        filter.setFloat(texelHeightOffsetLocation, 0);
-
-        ratio = getVerticalTexelOffsetRatio();
-        filter = getFilters().get(1);
-        texelWidthOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelWidthOffset");
-        texelHeightOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelHeightOffset");
-        filter.setFloat(texelWidthOffsetLocation, 0);
-        filter.setFloat(texelHeightOffsetLocation, ratio / getOutputHeight());
+        filter.setFloat(texelWidthOffsetLocation, widthOffset);
+        filter.setFloat(texelHeightOffsetLocation, heightOffset);
     }
+
+    protected void initTexelOffsets() {
+        firstPassFilter.runOnDraw(() -> {
+            float widthOffset = getHorizontalTexelOffsetRatio() / getOutputWidth();
+            updateTexelDimensions(firstPassFilter, widthOffset, 0f);
+        });
+        secondPassFilter.runOnDraw(() -> {
+            float heightOffset = getVerticalTexelOffsetRatio() / getOutputHeight();
+            updateTexelDimensions(secondPassFilter, 0f, heightOffset);
+        });
+    }
+
 
     @Override
     public void onOutputSizeChanged(int width, int height) {

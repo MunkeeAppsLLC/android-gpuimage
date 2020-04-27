@@ -31,6 +31,7 @@ import jp.co.cyberagent.android.gpuimage.GPUImageView
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageFilter
 import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImageTwoInputFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFxaaFilter
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster
 import jp.co.cyberagent.android.gpuimage.sample.R
@@ -43,7 +44,7 @@ class GalleryActivity : AppCompatActivity() {
     private val gpuImageContainerView: FrameLayout by lazy { findViewById<FrameLayout>(R.id.gpuimage_container) }
     private val seekBar: SeekBar by lazy { findViewById<SeekBar>(R.id.seekBar) }
     private val lutTableImage: ImageView by lazy { findViewById<ImageView>(R.id.lut_table) }
-    private lateinit var imageUri: Uri
+    private var imageUri: Uri? = null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +76,11 @@ class GalleryActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_PICK_IMAGE -> if (resultCode == RESULT_OK) {
-                imageUri = data!!.data
-                gpuImageView.setImage(data!!.data)
-                gpuImageView.postInvalidate()
+                data?.data.let {
+                    imageUri = it
+                    gpuImageView.setImage(it)
+                    gpuImageView.postInvalidate()
+                }
             } else {
                 finish()
             }
@@ -114,6 +117,12 @@ class GalleryActivity : AppCompatActivity() {
         when (filter) {
             is BaseGPUImage3DSamplerInputFilter -> lutTableImage.setImageBitmap(filter.texture)
             is BaseGPUImageTwoInputFilter -> lutTableImage.setImageBitmap(filter.bitmap)
+            is GPUImageFxaaFilter -> filter.apply {
+                resolution = arrayOf(
+                        gpuImageView.imageWidth.toFloat(), gpuImageView.imageHeight
+                        .toFloat()
+                ).toFloatArray()
+            }
         }
 //        if(gpuImageView.parent == null) {
 //            gpuImageContainerView.addView(gpuImageView)

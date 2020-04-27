@@ -24,9 +24,10 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.util.Log;
-import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
 
 import java.nio.IntBuffer;
+
+import jp.co.cyberagent.android.gpuimage.filter.BaseGPUImage3DSamplerInputFilter;
 
 public class OpenGlUtils {
     public static final int NO_TEXTURE = -1;
@@ -40,10 +41,14 @@ public class OpenGlUtils {
         if (usedTexId == NO_TEXTURE) {
             GLES20.glGenTextures(1, textures, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+            GLES20.glEnable(GLES20.GL_BLEND);
+            GLES20.glEnable(GLES20.GL_DITHER);
+            GLES20.glBlendEquation(GLES20.GL_FUNC_ADD);
+            GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_LINEAR);
 
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
         } else {
@@ -62,6 +67,10 @@ public class OpenGlUtils {
         if (usedTexId == NO_TEXTURE) {
             GLES20.glGenTextures(1, textures, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+            GLES20.glEnable(GLES20.GL_BLEND);
+            GLES20.glEnable(GLES20.GL_DITHER);
+            GLES20.glBlendEquation(GLES20.GL_FUNC_ADD);
+            GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
@@ -76,7 +85,6 @@ public class OpenGlUtils {
     }
 
     /**
-     *
      * Use this method in collaboration with
      * {@link BaseGPUImage3DSamplerInputFilter} to be able to
      * load 3D textures and use {@code sampler3D} data structure in your shaders.
@@ -90,10 +98,10 @@ public class OpenGlUtils {
      * {@link jp.co.cyberagent.android.gpuimage.GPUImage#glTextureView GPUImage.glTextureView}
      * before using this method.
      *
-     * @param data texture data
-     * @param width 3d texture dimension
-     * @param height 3d texture dimension
-     * @param depth 3d texture dimension
+     * @param data      texture data
+     * @param width     3d texture dimension
+     * @param height    3d texture dimension
+     * @param depth     3d texture dimension
      * @param usedTexId existing texture ID, to recycle the allocation
      * @return the textureID
      */
@@ -104,19 +112,19 @@ public class OpenGlUtils {
         if (usedTexId == NO_TEXTURE) {
             GLES30.glGenTextures(1, textures, 0);
             GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, textures[0]);
-            Log.e("OpenGLUtils", "1 "+GLES30.glGetError());
+            Log.e("OpenGLUtils", "1 " + GLES30.glGetError());
             GLES30.glTexParameterf(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
             GLES30.glTexParameterf(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
             GLES30.glTexParameterf(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_WRAP_R, GLES30.GL_CLAMP_TO_EDGE);
-            Log.e("OpenGLUtils", "2 "+GLES30.glGetError());
+            Log.e("OpenGLUtils", "2 " + GLES30.glGetError());
             GLES30.glTexParameterf(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
             GLES30.glTexParameterf(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR);
-            Log.e("OpenGLUtils", "3 "+GLES30.glGetError());
+            Log.e("OpenGLUtils", "3 " + GLES30.glGetError());
             GLES30.glTexImage3D(GLES30.GL_TEXTURE_3D, 0, GLES30.GL_RGBA, width, height, depth, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, data);
-            Log.e("OpenGLUtils", "4 "+GLES30.glGetError());
+            Log.e("OpenGLUtils", "4 " + GLES30.glGetError());
             GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, usedTexId);
         } else {
-            GLES30.glTexSubImage3D(GLES30.GL_TEXTURE_3D, 0, 0, 0, 0,  width, height, depth, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, data);
+            GLES30.glTexSubImage3D(GLES30.GL_TEXTURE_3D, 0, 0, 0, 0, width, height, depth, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, data);
             GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, usedTexId);
             textures[0] = usedTexId;
         }

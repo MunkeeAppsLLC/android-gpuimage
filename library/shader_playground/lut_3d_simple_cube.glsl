@@ -13,13 +13,13 @@ layout(location = 0) out vec4 fragColor;
 void main()
 {
     vec4 color;
-    if(flipGB != 0)
+    if (flipGB != 0)
     {
-        color = texture(img,textureCoord).rbga;
+        color = texture(img, textureCoord).rbga;
     }
     else
     {
-        color = texture(img,textureCoord);
+        color = texture(img, textureCoord);
     }
 
     //see https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter24.html

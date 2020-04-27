@@ -29,12 +29,12 @@ public class GPUImageTrailFilter extends GPUImageFilterGroup {
         this.addFilter(new GPUImageIdentityFilter());
     }
 
-    public void setTransform3D(float[] transform3D) {
-        transformFilter.setTransform3D(transform3D);
-    }
-
     public float[] getTransform3D() {
         return transformFilter.getTransform3D();
+    }
+
+    public void setTransform3D(float[] transform3D) {
+        transformFilter.setTransform3D(transform3D);
     }
 
     public void setIgnoreAspectRatio(boolean ignoreAspectRatio) {
@@ -54,7 +54,7 @@ public class GPUImageTrailFilter extends GPUImageFilterGroup {
     }
 
     @Override
-    public void addFilter(GPUImageFilter aFilter) {
+    public GPUImageFilter addFilter(GPUImageFilter aFilter) {
         throw new UnsupportedOperationException();
     }
 

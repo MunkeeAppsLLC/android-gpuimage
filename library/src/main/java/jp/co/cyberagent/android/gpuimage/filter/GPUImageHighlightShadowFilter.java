@@ -87,9 +87,8 @@ public class GPUImageHighlightShadowFilter extends BaseGPUImageFilter {
         setShadows(shadows);
     }
 
-    public void setHighlights(final float highlights) {
-        this.highlights = highlights;
-        setFloat(highlightsLocation, this.highlights);
+    public float getShadows() {
+        return shadows;
     }
 
     public void setShadows(final float shadows) {
@@ -97,11 +96,12 @@ public class GPUImageHighlightShadowFilter extends BaseGPUImageFilter {
         setFloat(shadowsLocation, this.shadows);
     }
 
-    public float getShadows() {
-        return shadows;
-    }
-
     public float getHighlights() {
         return highlights;
+    }
+
+    public void setHighlights(final float highlights) {
+        this.highlights = highlights;
+        setFloat(highlightsLocation, this.highlights);
     }
 }

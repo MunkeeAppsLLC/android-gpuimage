@@ -45,16 +45,15 @@ import static jp.co.cyberagent.android.gpuimage.GPUImage.SURFACE_TYPE_TEXTURE_VI
 
 public class GPUImageView extends FrameLayout {
 
+    public final static int RENDERMODE_WHEN_DIRTY = 0;
+    public final static int RENDERMODE_CONTINUOUSLY = 1;
+    public Size forceSize = null;
     private int surfaceType = SURFACE_TYPE_TEXTURE_VIEW;
     private View surfaceView;
     private GPUImage gpuImage;
     private boolean isShowLoading = true;
     private GPUImageFilter filter;
-    public Size forceSize = null;
     private float ratio = 0.0f;
-
-    public final static int RENDERMODE_WHEN_DIRTY = 0;
-    public final static int RENDERMODE_CONTINUOUSLY = 1;
 
     public GPUImageView(Context context) {
         super(context);
@@ -229,6 +228,15 @@ public class GPUImageView extends FrameLayout {
     }
 
     /**
+     * Get the current applied filter.
+     *
+     * @return the current filter
+     */
+    public GPUImageFilter getFilter() {
+        return filter;
+    }
+
+    /**
      * Set the filter to be applied on the image.
      *
      * @param filter GPUImageFilter that should be applied on the image.
@@ -237,15 +245,6 @@ public class GPUImageView extends FrameLayout {
         this.filter = filter;
         gpuImage.setFilter(filter);
         requestRender();
-    }
-
-    /**
-     * Get the current applied filter.
-     *
-     * @return the current filter
-     */
-    public GPUImageFilter getFilter() {
-        return filter;
     }
 
     /**
@@ -290,7 +289,8 @@ public class GPUImageView extends FrameLayout {
     /**
      * Returns a new scaled bitmap using the current set bitmap.
      * If the bitmap is not set, the returned value is null
-     * @param newWidth width to be scaled to
+     *
+     * @param newWidth  width to be scaled to
      * @param newHeight height to be scaled to
      * @return the new scaled bitmap
      */
@@ -312,6 +312,14 @@ public class GPUImageView extends FrameLayout {
     public void saveToPictures(final String folderName, final String fileName,
                                final OnPictureSavedListener listener) {
         new SaveTask(folderName, fileName, listener).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    public void saveToPictures2(String folderName, String fileName, GPUImage.OnPictureSavedListener listener) {
+        gpuImage.saveToPictures(folderName, fileName, listener);
+    }
+
+    public void saveToPictures2(Bitmap bitmap, String folderName, String fileName, GPUImage.OnPictureSavedListener listener) {
+        gpuImage.saveToPictures(bitmap, folderName, fileName, listener);
     }
 
     /**
@@ -420,6 +428,22 @@ public class GPUImageView extends FrameLayout {
         return resultBitmap;
     }
 
+    public Bitmap alternateCapture() throws InterruptedException {
+        final Semaphore waiter = new Semaphore(0);
+        final Bitmap[] result = {null};
+        gpuImage.runOnGLThread(() -> {
+            result[0] = gpuImage.capture();
+            waiter.release();
+        });
+        requestRender();
+        waiter.acquire();
+        return result[0];
+    }
+
+    public Bitmap getBitmapWithFilterApplied() throws InterruptedException {
+        return gpuImage.getBitmapWithFilterApplied();
+    }
+
     /**
      * Pauses the Surface.
      */
@@ -456,6 +480,42 @@ public class GPUImageView extends FrameLayout {
         } else {
             Log.w("GPUImageView", "SurfaceView type is GLSurfaceView, can't setPreserveEglContextOnPause");
         }
+    }
+
+    public int getDisplayWidth() {
+        return surfaceView.getWidth();
+    }
+
+    public int getImageWidth() {
+        return getGPUImage().getImageWidth();
+    }
+
+    public int getImageHeight() {
+        return getGPUImage().getImageHeight();
+    }
+
+    public int getDisplayHeight() {
+        return surfaceView.getHeight();
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, boolean recycle) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap, recycle);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height, boolean recycle) {
+        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height, recycle);
+    }
+
+    public interface OnPictureSavedListener {
+        void onPictureSaved(Uri uri);
     }
 
     public static class Size {
@@ -532,42 +592,6 @@ public class GPUImageView extends FrameLayout {
         }
     }
 
-    public int getDisplayWidth() {
-        return surfaceView.getWidth();
-    }
-
-    public interface OnPictureSavedListener {
-        void onPictureSaved(Uri uri);
-    }
-
-    public int getImageWidth() {
-        return getGPUImage().getImageWidth();
-    }
-
-    public int getImageHeight() {
-        return getGPUImage().getImageHeight();
-    }
-
-    public int getDisplayHeight() {
-        return surfaceView.getHeight();
-    }
-
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, boolean recycle) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap, recycle);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height, boolean recycle) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height, recycle);
-    }
-
     private class SaveTask extends AsyncTask<Void, Void, Void> {
         private final String folderName;
         private final String fileName;
@@ -621,17 +645,5 @@ public class GPUImageView extends FrameLayout {
                 e.printStackTrace();
             }
         }
-    }
-
-    public interface OnPictureSavedListener {
-        void onPictureSaved(Uri uri);
-    }
-
-    public int getImageWidth() {
-        return getGPUImage().getImageWidth();
-    }
-
-    public int getImageHeight() {
-        return getGPUImage().getImageHeight();
     }
 }

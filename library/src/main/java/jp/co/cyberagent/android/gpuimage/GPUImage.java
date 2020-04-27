@@ -20,8 +20,12 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.database.Cursor;
-import android.graphics.*;
+import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -33,18 +37,24 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.view.Display;
 import android.view.WindowManager;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
-import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageIdentityFilter;
+import jp.co.cyberagent.android.gpuimage.util.Rotation;
 
 /**
  * The main accessor for GPUImage functionality. This class helps to do common
@@ -52,17 +62,8 @@ import java.util.concurrent.CountDownLatch;
  */
 public class GPUImage {
 
-    public enum ScaleType {
-        CENTER_INSIDE,
-        CENTER_CROP,
-        MATRIX,
-        CENTER,
-        FIT_XY
-    }
-
     static final int SURFACE_TYPE_SURFACE_VIEW = 0;
     static final int SURFACE_TYPE_TEXTURE_VIEW = 1;
-
     private final Context context;
     private final GPUImageRenderer renderer;
     private int surfaceType = SURFACE_TYPE_TEXTURE_VIEW;
@@ -74,7 +75,6 @@ public class GPUImage {
     private int displayHeight;
     private Matrix matrix = new Matrix();
     private ScaleType scaleType = ScaleType.CENTER_CROP;
-
     private Queue<Runnable> runOnImageLoaded = new ConcurrentLinkedQueue<>();
 
     /**
@@ -91,6 +91,49 @@ public class GPUImage {
         filter = new GPUImageIdentityFilter();
         renderer = new GPUImageRenderer(filter);
         this.initDisplaySize(context);
+    }
+
+    /**
+     * Gets the images for multiple filters on a image. This can be used to
+     * quickly get thumbnail images for filters. <br>
+     * Whenever a new Bitmap is ready, the listener will be called with the
+     * bitmap. The order of the calls to the listener will be the same as the
+     * filter order.
+     *
+     * @param bitmap   the bitmap on which the filters will be applied
+     * @param filters  the filters which will be applied on the bitmap
+     * @param listener the listener on which the results will be notified
+     */
+    public static void getBitmapForMultipleFilters(final Bitmap bitmap,
+                                                   final List<GPUImageFilter> filters, final ResponseListener<Bitmap> listener) {
+        if (filters.isEmpty()) {
+            return;
+        }
+        GPUImageRenderer renderer = new GPUImageRenderer(filters.get(0));
+        renderer.setImageBitmap(bitmap, false);
+        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
+        buffer.setRenderer(renderer);
+
+        for (GPUImageFilter filter : filters) {
+            renderer.setFilter(filter);
+            listener.response(buffer.getBitmap());
+            filter.destroy();
+        }
+        renderer.deleteImage();
+        buffer.destroy();
+    }
+
+    public static @Nullable
+    Bitmap getBitmapForFilter(@NonNull final Bitmap bitmap, @NonNull GPUImageFilter filter) {
+        Bitmap result = null;
+        GPUImageRenderer renderer = new GPUImageRenderer(filter);
+        renderer.setImageBitmap(bitmap, false);
+        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
+        buffer.setRenderer(renderer);
+        result = buffer.getBitmap();
+        renderer.deleteImage();
+        buffer.destroy();
+        return result;
     }
 
     private void initDisplaySize(Context context) {
@@ -251,7 +294,8 @@ public class GPUImage {
     /**
      * Returns a new scaled bitmap using the current set bitmap.
      * If the bitmap is not set, the returned value is null
-     * @param newWidth width to be scaled to
+     *
+     * @param newWidth  width to be scaled to
      * @param newHeight height to be scaled to
      * @return the new scaled bitmap
      */
@@ -380,6 +424,14 @@ public class GPUImage {
         return getBitmapWithFilterApplied(bitmap, false);
     }
 
+    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, int width, int height) {
+        return getBitmapWithFilterApplied(bitmap, width, height, false);
+    }
+
+    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, final boolean recycle) {
+        return getBitmapWithFilterApplied(bitmap, bitmap.getWidth(), bitmap.getHeight(), recycle);
+    }
+
     /**
      * Gets the given bitmap with current filter applied as a Bitmap.
      *
@@ -387,91 +439,44 @@ public class GPUImage {
      * @param recycle recycle the bitmap or not.
      * @return the bitmap with filter applied
      */
-    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, boolean recycle) {
-        if (glSurfaceView != null || glTextureView != null) {
-            renderer.deleteImage();
-            renderer.runOnDraw(new Runnable() {
+    public synchronized Bitmap getBitmapWithFilterApplied(
+            final Bitmap bitmap,
+            final int width,
+            final int height,
+            final boolean recycle
+    ) {
+        final Bitmap[] result = {null};
+        final CountDownLatch latch = new CountDownLatch(1);
+        final GPUImageRenderer bufferRenderer = new GPUImageRenderer();
+        GPUImageFilter bufferFilter = filter.copy();
+        bufferRenderer.setRotation(
+                Rotation.NORMAL,
+                this.renderer.isFlippedHorizontally(),
+                this.renderer.isFlippedVertically()
+        );
+        bufferRenderer.setScaleType(scaleType);
+        bufferRenderer.setMatrix(matrix);
 
-                @Override
-                public void run() {
-                    synchronized (filter) {
-                        filter.destroy();
-                        filter.notify();
-                    }
-                }
-            });
-            synchronized (filter) {
-                requestRender();
-                try {
-                    filter.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        final PixelBuffer buffer = new PixelBuffer(width, height);
+        buffer.setRenderer(bufferRenderer);
+        bufferRenderer.setImageBitmap(bitmap, recycle);
+        buffer.draw();
+        bufferRenderer.setFilter(bufferFilter);
+        buffer.draw();
+        bufferRenderer.runOnDrawEnd(() -> {
+            result[0] = buffer.getBitmap();
+            latch.countDown();
+        });
+        buffer.draw();
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            bufferFilter.destroy();
+            buffer.destroy();
         }
-
-        GPUImageRenderer renderer = new GPUImageRenderer(filter);
-        renderer.setRotation(Rotation.NORMAL,
-                this.renderer.isFlippedHorizontally(), this.renderer.isFlippedVertically());
-        renderer.setScaleType(scaleType);
-        renderer.setMatrix(matrix);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
-        renderer.setImageBitmap(bitmap, recycle);
-        Bitmap result = buffer.getBitmap();
-        filter.destroy();
-        renderer.deleteImage();
-        buffer.destroy();
-
-        this.renderer.setFilter(filter);
-        if (currentBitmap != null) {
-            this.renderer.setImageBitmap(currentBitmap, false);
-        }
-        requestRender();
-
-        return result;
-    }
-
-    /**
-     * Gets the images for multiple filters on a image. This can be used to
-     * quickly get thumbnail images for filters. <br>
-     * Whenever a new Bitmap is ready, the listener will be called with the
-     * bitmap. The order of the calls to the listener will be the same as the
-     * filter order.
-     *
-     * @param bitmap   the bitmap on which the filters will be applied
-     * @param filters  the filters which will be applied on the bitmap
-     * @param listener the listener on which the results will be notified
-     */
-    public static void getBitmapForMultipleFilters(final Bitmap bitmap,
-                                                   final List<GPUImageFilter> filters, final ResponseListener<Bitmap> listener) {
-        if (filters.isEmpty()) {
-            return;
-        }
-        GPUImageRenderer renderer = new GPUImageRenderer(filters.get(0));
-        renderer.setImageBitmap(bitmap, false);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
-
-        for (GPUImageFilter filter : filters) {
-            renderer.setFilter(filter);
-            listener.response(buffer.getBitmap());
-            filter.destroy();
-        }
-        renderer.deleteImage();
-        buffer.destroy();
-    }
-
-    public static @Nullable  Bitmap getBitmapForFilter(@NonNull final Bitmap bitmap, @NonNull GPUImageFilter filter) {
-        Bitmap result = null;
-        GPUImageRenderer renderer = new GPUImageRenderer(filter);
-        renderer.setImageBitmap(bitmap, false);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
-        result = buffer.getBitmap();
-        renderer.deleteImage();
-        buffer.destroy();
-        return result;
+        return result[0];
     }
 
     public Bitmap capture() {
@@ -541,18 +546,18 @@ public class GPUImage {
             if (viewWidth > viewHeight) {
                 if (imageWidth > imageHeight) {
                     outputWidth = viewWidth;
-                    outputHeight = (int)(imageHeight * viewHeight / imageWidth);
+                    outputHeight = (int) (imageHeight * viewHeight / imageWidth);
                 } else {
-                    outputWidth = (int)(imageWidth * viewHeight / imageHeight);
+                    outputWidth = (int) (imageWidth * viewHeight / imageHeight);
                     outputHeight = viewHeight;
                 }
             } else {
                 if (imageWidth > imageHeight) {
-                    outputWidth = (int)(imageWidth * viewHeight / imageHeight);
+                    outputWidth = (int) (imageWidth * viewHeight / imageHeight);
                     outputHeight = viewHeight;
                 } else {
                     outputWidth = viewWidth;
-                    outputHeight = (int)(imageHeight * viewWidth / imageWidth);
+                    outputHeight = (int) (imageHeight * viewWidth / imageWidth);
                 }
             }
         } else if (currentBitmap != null) {
@@ -564,7 +569,7 @@ public class GPUImage {
     public void enqueueOnImageLoaded(final Runnable runnable) {
         runOnImageLoaded.add(runnable);
         if (currentBitmap != null) {
-            while(!runOnImageLoaded.isEmpty()) {
+            while (!runOnImageLoaded.isEmpty()) {
                 runOnImageLoaded.poll().run();
             }
         }
@@ -574,15 +579,35 @@ public class GPUImage {
         runOnImageLoaded.clear();
     }
 
+    public enum ScaleType {
+        CENTER_INSIDE,
+        CENTER_CROP,
+        MATRIX,
+        CENTER,
+        FIT_XY
+    }
+
+    public interface OnPictureSavedListener {
+        void onPictureSaved(Uri uri);
+    }
+
+    public interface OnImageLoaded {
+        void onImageLoaded();
+    }
+
+    public interface ResponseListener<T> {
+        void response(T item);
+    }
+
     @Deprecated
     private static class SaveTask extends AsyncTask<Void, Void, Void> {
 
-        private GPUImage gpuImage;
         private final Bitmap bitmap;
         private final String folderName;
         private final String fileName;
         private final OnPictureSavedListener listener;
         private final Handler handler;
+        private GPUImage gpuImage;
 
         public SaveTask(GPUImage gpuImage, final Bitmap bitmap,
                         final String folderName, final String fileName,
@@ -597,7 +622,8 @@ public class GPUImage {
 
         @Override
         protected Void doInBackground(final Void... params) {
-            Bitmap result = gpuImage.getBitmapWithFilterApplied(bitmap);
+            Bitmap result;
+            result = gpuImage.getBitmapWithFilterApplied(bitmap);
             saveImage(folderName, fileName, result);
             return null;
         }
@@ -621,14 +647,6 @@ public class GPUImage {
                 e.printStackTrace();
             }
         }
-    }
-
-    public interface OnPictureSavedListener {
-        void onPictureSaved(Uri uri);
-    }
-
-    public interface OnImageLoaded {
-        void onImageLoaded();
     }
 
     private static class LoadImageUriTask extends LoadImageTask {
@@ -853,9 +871,5 @@ public class GPUImage {
         }
 
         protected abstract int getImageOrientation() throws IOException;
-    }
-
-    public interface ResponseListener<T> {
-        void response(T item);
     }
 }

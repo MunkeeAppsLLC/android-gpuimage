@@ -14,7 +14,7 @@ float lerp(float a, float b, float f) {
     return a + f * (b - a);
 }
 
-vec3 lerp(vec3 a,  vec3 b, float f) {
+vec3 lerp(vec3 a, vec3 b, float f) {
     vec3 result;
     result.r = lerp(a.r, b.r, f);
     result.g = lerp(a.g, b.g, f);
