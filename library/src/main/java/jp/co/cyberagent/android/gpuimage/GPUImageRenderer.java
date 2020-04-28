@@ -25,6 +25,8 @@ import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -230,10 +232,12 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
 
     public void deleteImage() {
         runOnDraw(() -> {
-            GLES20.glDeleteTextures(1, new int[]{
-                    glTextureId
-            }, 0);
-            glTextureId = NO_IMAGE;
+            if (glTextureId != NO_IMAGE) {
+                GLES20.glDeleteTextures(1, new int[]{
+                        glTextureId
+                }, 0);
+                glTextureId = NO_IMAGE;
+            }
         });
     }
 
@@ -274,11 +278,9 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
             imageWidth = bitmap.getWidth();
             imageHeight = bitmap.getHeight();
             adjustImageScaling();
-            runOnDraw(() -> {
-                if (onImageLoaded != null) {
-                    onImageLoaded.run();
-                }
-            });
+            if (onImageLoaded != null) {
+                new Handler(Looper.getMainLooper()).post(onImageLoaded);
+            }
         });
     }
 

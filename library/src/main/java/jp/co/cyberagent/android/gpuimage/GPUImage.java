@@ -27,7 +27,6 @@ import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.Camera;
-import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
@@ -40,6 +39,7 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.exifinterface.media.ExifInterface;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -280,14 +280,20 @@ public class GPUImage {
         requestRender();
     }
 
+    public void setImage(final Bitmap bitmap) {
+        setImage(bitmap, null);
+    }
+
     /**
      * Sets the image on which the filter should be applied.
      *
-     * @param bitmap the new image
+     * @param bitmap                the new image
+     * @param onImageLoadedRunnable runnable called on the MainThread after the image has been
+     *                              loaded
      */
-    public void setImage(final Bitmap bitmap) {
+    public void setImage(final Bitmap bitmap, Runnable onImageLoadedRunnable) {
         currentBitmap = bitmap;
-        renderer.setImageBitmap(bitmap, false);
+        renderer.setImageBitmap(bitmap, false, onImageLoadedRunnable);
         requestRender();
     }
 
@@ -743,10 +749,11 @@ public class GPUImage {
         protected void onPostExecute(Bitmap bitmap) {
             super.onPostExecute(bitmap);
             gpuImage.deleteImage();
-            gpuImage.setImage(bitmap);
-            while (!gpuImage.runOnImageLoaded.isEmpty()) {
-                gpuImage.runOnImageLoaded.poll().run();
-            }
+            gpuImage.setImage(bitmap, () -> {
+                while (!gpuImage.runOnImageLoaded.isEmpty()) {
+                    gpuImage.runOnImageLoaded.poll().run();
+                }
+            });
         }
 
         protected abstract Bitmap decode(BitmapFactory.Options options);
