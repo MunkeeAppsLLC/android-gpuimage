@@ -7,7 +7,7 @@ version=VERSION_NAME
 project.archivesBaseName="android-gpuimage"
 
 android {
-    ndkVersion = "21.1.6352462"
+    ndkVersion = "20.0.5594570"
     compileSdkVersion COMPILE_SDK_VERSION as int
     defaultConfig {
         minSdkVersion MIN_SDK_VERSION as int
