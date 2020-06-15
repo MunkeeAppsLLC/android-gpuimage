@@ -503,20 +503,20 @@ public class GPUImageView extends FrameLayout {
         return surfaceView.getHeight();
     }
 
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap);
+
+    public static Bitmap getBitmapWithFilterApplied(Bitmap bitmap, GPUImageFilter filter) {
+        return GPUImage.getBitmapWithFilterApplied(bitmap, bitmap.getWidth(), bitmap.getHeight(),
+                false, false, filter,
+                GPUImage.ScaleType.CENTER_INSIDE, new Matrix(), false);
     }
 
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, boolean recycle) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap, recycle);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height, boolean recycle) {
-        return gpuImage.getBitmapWithFilterApplied(bitmap, width, height, recycle);
+    public static Bitmap getBitmapWithFilterApplied(Bitmap bitmap, int width, int height,
+                                                    boolean isFlippedHorizontally, boolean isFlippedVertically,
+                                                    GPUImageFilter bufferFilter, GPUImage.ScaleType scaleType,
+                                                    Matrix matrix, boolean recycle) {
+        return GPUImage.getBitmapWithFilterApplied(bitmap, width, height,
+                isFlippedHorizontally, isFlippedVertically,
+                bufferFilter, scaleType, matrix, recycle);
     }
 
     public interface OnPictureSavedListener {

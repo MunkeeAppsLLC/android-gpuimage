@@ -426,16 +426,14 @@ public class GPUImage {
      * @param bitmap the bitmap on which the current filter should be applied
      * @return the bitmap with filter applied
      */
-    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap) {
-        return getBitmapWithFilterApplied(bitmap, false);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, int width, int height) {
-        return getBitmapWithFilterApplied(bitmap, width, height, false);
-    }
-
-    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap, final boolean recycle) {
-        return getBitmapWithFilterApplied(bitmap, bitmap.getWidth(), bitmap.getHeight(), recycle);
+    public static Bitmap getBitmapWithFilterApplied(final Bitmap bitmap,
+                                                    GPUImageRenderer renderer,
+                                                    GPUImageFilter filter,
+                                                    ScaleType scaleType,
+                                                    Matrix matrix) {
+        return getBitmapWithFilterApplied(bitmap, bitmap.getWidth(), bitmap.getHeight(),
+                renderer.isFlippedHorizontally(), renderer.isFlippedVertically(),
+                filter.copy(), scaleType, matrix, false);
     }
 
     /**
@@ -445,20 +443,24 @@ public class GPUImage {
      * @param recycle recycle the bitmap or not.
      * @return the bitmap with filter applied
      */
-    public synchronized Bitmap getBitmapWithFilterApplied(
+    public static synchronized Bitmap getBitmapWithFilterApplied(
             final Bitmap bitmap,
             final int width,
             final int height,
+            final boolean isFlippedHorizontally,
+            final boolean isFlippedVertically,
+            final GPUImageFilter bufferFilter,
+            final ScaleType scaleType,
+            final Matrix matrix,
             final boolean recycle
     ) {
         final Bitmap[] result = {null};
         final CountDownLatch latch = new CountDownLatch(1);
         final GPUImageRenderer bufferRenderer = new GPUImageRenderer();
-        GPUImageFilter bufferFilter = filter.copy();
         bufferRenderer.setRotation(
                 Rotation.NORMAL,
-                this.renderer.isFlippedHorizontally(),
-                this.renderer.isFlippedVertically()
+                isFlippedHorizontally,
+                isFlippedVertically
         );
         bufferRenderer.setScaleType(scaleType);
         bufferRenderer.setMatrix(matrix);
@@ -483,6 +485,10 @@ public class GPUImage {
             buffer.destroy();
         }
         return result[0];
+    }
+
+    public Bitmap getBitmapWithFilterApplied(Bitmap bitmap) {
+        return getBitmapWithFilterApplied(bitmap, renderer, filter, scaleType, matrix);
     }
 
     public Bitmap capture() {
