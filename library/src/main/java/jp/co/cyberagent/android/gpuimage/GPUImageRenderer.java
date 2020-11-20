@@ -423,7 +423,7 @@ public class GPUImageRenderer implements GLSurfaceView.Renderer, GLTextureView.R
         }
     }
 
-    protected void runOnDrawEnd(final Runnable runnable) {
+    public void runOnDrawEnd(final Runnable runnable) {
         synchronized (runOnDrawEnd) {
             runOnDrawEnd.add(runnable);
         }
